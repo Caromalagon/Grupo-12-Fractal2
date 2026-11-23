@@ -1,0 +1,2594 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="artifact-type" content="dashboard">
+  <meta name="design-style" content="briefing">
+  <title>Caso Variolux · Diagnóstico Fractal 2 (Grupo 12 — Uniandes)</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js"></script>
+  <script src="https://unpkg.com/lucide@1.43.0/dist/umd/lucide.min.js"></script>
+
+  <style>
+    :root {
+      color-scheme: light;
+
+      /* Briefing style tokens */
+      --background: #faf9f5;
+      --surface-container-low: #ffffff;
+      --surface-container: #f1efe8;
+      --surface-container-high: #e6e2d6;
+
+      --on-surface: #17181a;
+      --on-surface-variant: #56585c;
+
+      --outline: #17181a;
+      --outline-variant: #dedad0;
+
+      --primary: #17181a;
+      --on-primary: #faf9f5;
+      --primary-container: #f2b705;
+      --on-primary-container: #17181a;
+      --secondary: #1f4e5f;
+      --tertiary: #785008;
+      --error: #b42318;
+      --on-error: #ffffff;
+
+      /* Data series */
+      --data-1: #1f4e5f;
+      --data-2: #d99000;
+      --data-3: #2b6e52;
+      --data-4: #b84a39;
+      --data-context: #c4bfb2;
+
+      /* Fonts */
+      --font-headline: 'Source Serif 4', serif;
+      --font-body: 'Plus Jakarta Sans', sans-serif;
+      --font-label: 'Geist Mono', monospace;
+
+      /* Radii */
+      --rounded: 0.25rem;
+      --rounded-lg: 0.375rem;
+      --rounded-full: 0.25rem;
+
+      /* Briefing effects */
+      --section-rule: 1.5px solid var(--outline);
+      --card-border: 1px solid var(--outline-variant);
+      --badge-radius: 2px;
+      --heading-tracking: -0.02em;
+      --label-tracking: 0.08em;
+
+      /* Shared semantic tokens (traffic lights harmonized with Briefing) */
+      --positive: #1f6b47;
+      --positive-bg: #e6f4ec;
+      --positive-border: #8ec9a7;
+      --warning: #855806;
+      --warning-bg: #fcf2d6;
+      --warning-border: #e5c36b;
+      --danger: #b42318;
+      --danger-bg: #fbeae8;
+      --danger-border: #e6a29c;
+
+      /* Diagram accents */
+      --glass-tint: #dceef2;
+      --glass-dark: #192b36;
+      --pvb-tint: #f5ebd1;
+      --led-cyan: #248ea6;
+      --led-glow: #f2b705;
+
+      --focus: #1f4e5f;
+
+      /* Type scale (Dashboard) */
+      --display-size: clamp(1.85rem, 1.4rem + 1.35vw, 2.5rem);
+      --headline-size: clamp(1.3rem, 1.1rem + 0.6vw, 1.65rem);
+      --subhead-size: clamp(1.0625rem, 1rem + 0.25vw, 1.2rem);
+      --body-size: clamp(0.9375rem, 0.9rem + 0.15vw, 1rem);
+      --label-size: 0.75rem;
+
+      /* Spacing scale */
+      --space-xs: 0.25rem;
+      --space-sm: 0.5rem;
+      --space-md: 1rem;
+      --space-lg: 1.5rem;
+      --space-xl: 2.5rem;
+      --space-2xl: 4rem;
+
+      /* Motion */
+      --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+      --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+      --dur-micro: 120ms;
+      --dur-short: 220ms;
+      --dur-long: 420ms;
+
+      /* Modal shadow */
+      --overlay-bg: rgba(23, 24, 26, 0.62);
+      --modal-shadow: 0 20px 50px rgba(23, 24, 26, 0.22);
+    }
+
+    /* Base reset */
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body {
+      overflow-x: clip;
+      margin: 0;
+      padding: 0;
+      background: var(--background);
+      color: var(--on-surface);
+      font-family: var(--font-body);
+      font-size: var(--body-size);
+      line-height: 1.6;
+      scroll-behavior: smooth;
+    }
+    header { position: static !important; }
+
+    button, input, select, textarea {
+      font-family: inherit;
+      font-size: inherit;
+      color: inherit;
+    }
+
+    :focus-visible {
+      outline: 2.5px solid var(--focus);
+      outline-offset: 2px;
+    }
+
+    .page-grid {
+      display: grid;
+      gap: var(--space-xl);
+      padding: var(--space-lg) var(--space-lg) var(--space-2xl);
+      max-width: 1280px;
+      margin: 0 auto;
+    }
+    .page-grid * { min-width: 0; }
+
+    /* Briefing Treatments */
+    .dossier-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-sm);
+      border-bottom: var(--section-rule);
+      padding-bottom: var(--space-sm);
+      margin-bottom: var(--space-md);
+    }
+    .dossier-bar-left {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--space-sm);
+    }
+    .dossier-pill {
+      background: var(--primary-container);
+      color: var(--on-primary-container);
+      font-family: var(--font-body);
+      font-weight: 700;
+      font-size: 0.6875rem;
+      letter-spacing: var(--label-tracking);
+      text-transform: uppercase;
+      padding: 0.2rem 0.55rem;
+      border-radius: var(--badge-radius);
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-xs);
+    }
+    .dossier-meta {
+      font-family: var(--font-label);
+      font-size: var(--label-size);
+      color: var(--on-surface-variant);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .title {
+      font-family: var(--font-headline);
+      font-size: var(--display-size);
+      font-weight: 600;
+      letter-spacing: var(--heading-tracking);
+      line-height: 1.08;
+      color: var(--on-surface);
+      margin: 0;
+    }
+    .standfirst {
+      font-family: var(--font-body);
+      font-size: var(--subhead-size);
+      font-weight: 600;
+      color: var(--secondary);
+      margin: var(--space-sm) 0 0;
+      max-width: 78ch;
+    }
+    .lead-copy {
+      color: var(--on-surface-variant);
+      margin: var(--space-sm) 0 0;
+      max-width: 75ch;
+    }
+
+    .section-title {
+      font-family: var(--font-headline);
+      font-size: var(--headline-size);
+      font-weight: 600;
+      letter-spacing: var(--heading-tracking);
+      line-height: 1.15;
+      margin: 0;
+      color: var(--on-surface);
+    }
+    .section-deck {
+      color: var(--secondary);
+      font-weight: 600;
+      margin: var(--space-xs) 0 0;
+      font-size: 0.95rem;
+    }
+
+    .figure-card {
+      background: var(--surface-container-low);
+      border: var(--card-border);
+      border-radius: var(--rounded-lg);
+      padding: var(--space-md) var(--space-lg);
+    }
+    .figure-card .value {
+      font-family: var(--font-headline);
+      font-weight: 600;
+      font-variant-numeric: lining-nums tabular-nums;
+      font-size: clamp(1.6rem, 1.3rem + 0.8vw, 2.15rem);
+      line-height: 1.1;
+      color: var(--on-surface);
+    }
+
+    .aside-box {
+      background: var(--surface-container);
+      border-top: var(--section-rule);
+      border-radius: 0 0 var(--rounded-lg) var(--rounded-lg);
+      padding: var(--space-md) var(--space-lg);
+    }
+
+    .index-num {
+      font-family: var(--font-label);
+      font-weight: 600;
+      font-size: var(--label-size);
+      color: var(--secondary);
+      background: var(--surface-container);
+      padding: 0.15rem 0.45rem;
+      border-radius: var(--badge-radius);
+    }
+
+    /* Navigation strip */
+    .quick-nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-xs);
+      margin-top: var(--space-md);
+      padding-top: var(--space-sm);
+      border-top: 1px solid var(--outline-variant);
+    }
+    .nav-link {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-xs);
+      min-height: 36px;
+      padding: 0.35rem 0.75rem;
+      border: 1px solid var(--outline-variant);
+      border-radius: var(--rounded);
+      background: var(--surface-container-low);
+      color: var(--on-surface);
+      text-decoration: none;
+      font-family: var(--font-label);
+      font-size: var(--label-size);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      transition: background-color var(--dur-micro) var(--ease-out), border-color var(--dur-micro) var(--ease-out);
+    }
+    .nav-link:hover {
+      background: var(--surface-container);
+      border-color: var(--outline);
+    }
+
+    /* Buttons & Interactive Controls */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-xs);
+      min-height: 44px;
+      padding: 0.5rem var(--space-md);
+      border-radius: var(--rounded);
+      font-weight: 600;
+      font-size: 0.875rem;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: background-color var(--dur-micro) var(--ease-out), color var(--dur-micro) var(--ease-out), box-shadow var(--dur-micro) var(--ease-out);
+    }
+    .btn-primary {
+      background: var(--primary);
+      color: var(--on-primary);
+    }
+    .btn-primary:hover {
+      background: var(--secondary);
+    }
+    .btn-secondary {
+      background: var(--surface-container-low);
+      border-color: var(--outline-variant);
+      color: var(--on-surface);
+    }
+    .btn-secondary:hover {
+      background: var(--surface-container);
+      border-color: var(--outline);
+    }
+    .btn-secondary.is-active,
+    .filter-pill.is-active {
+      background: var(--primary);
+      color: var(--on-primary);
+      border-color: var(--primary);
+    }
+
+    /* Hero Metadata & KPI Grid */
+    .hero-meta-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
+      gap: var(--space-md);
+      margin-top: var(--space-md);
+    }
+    .meta-block {
+      background: var(--surface-container);
+      padding: var(--space-sm) var(--space-md);
+      border-left: 3px solid var(--secondary);
+      border-radius: 0 var(--rounded) var(--rounded) 0;
+    }
+    .meta-label {
+      font-family: var(--font-label);
+      font-size: var(--label-size);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--on-surface-variant);
+      display: block;
+    }
+    .meta-val {
+      font-weight: 600;
+      font-size: 0.92rem;
+      color: var(--on-surface);
+      margin-top: 2px;
+      display: block;
+    }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
+      gap: var(--space-md);
+    }
+    .kpi-label {
+      font-family: var(--font-label);
+      font-size: var(--label-size);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--on-surface-variant);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-xs);
+      margin-bottom: var(--space-xs);
+    }
+    .kpi-sub {
+      font-size: 0.84rem;
+      color: var(--on-surface-variant);
+      margin-top: var(--space-xs);
+    }
+
+    /* Overview Analytics Split */
+    .analytics-split {
+      display: grid;
+      grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr);
+      gap: var(--space-lg);
+      align-items: stretch;
+    }
+    .chart-box {
+      position: relative;
+      min-height: 310px;
+      width: 100%;
+    }
+    .chart-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-sm);
+      margin-bottom: var(--space-md);
+    }
+    .chart-title {
+      font-family: var(--font-headline);
+      font-weight: 600;
+      font-size: 1.15rem;
+      margin: 0;
+    }
+
+    /* Semantic Traffic Light Badges */
+    .sem-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-family: var(--font-label);
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 0.2rem 0.55rem;
+      border-radius: var(--badge-radius);
+      border: 1px solid transparent;
+      white-space: nowrap;
+    }
+    .sem-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .sem-green {
+      background: var(--positive-bg);
+      color: var(--positive);
+      border-color: var(--positive-border);
+    }
+    .sem-green .sem-dot { background: var(--positive); }
+    .sem-yellow {
+      background: var(--warning-bg);
+      color: var(--warning);
+      border-color: var(--warning-border);
+    }
+    .sem-yellow .sem-dot { background: var(--warning); }
+    .sem-red {
+      background: var(--danger-bg);
+      color: var(--danger);
+      border-color: var(--danger-border);
+    }
+    .sem-red .sem-dot { background: var(--danger); }
+
+    /* Section 1: Technologies */
+    .tech-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-sm);
+      margin-bottom: var(--space-md);
+    }
+    .tech-workspace {
+      display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+      gap: var(--space-lg);
+      align-items: start;
+    }
+    .tech-diagram-card {
+      background: var(--surface-container-low);
+      border: var(--card-border);
+      border-radius: var(--rounded-lg);
+      padding: var(--space-md);
+    }
+    .diagram-stage {
+      background: var(--surface-container);
+      border: 1px solid var(--outline-variant);
+      border-radius: var(--rounded);
+      padding: var(--space-md);
+      margin-bottom: var(--space-md);
+    }
+    .diagram-controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: end;
+      gap: var(--space-md);
+      padding-top: var(--space-sm);
+      border-top: 1px solid var(--outline-variant);
+    }
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-xs);
+      flex: 1 1 200px;
+    }
+    .control-label {
+      font-family: var(--font-label);
+      font-size: var(--label-size);
+      text-transform: uppercase;
+      color: var(--on-surface-variant);
+      letter-spacing: 0.05em;
+    }
+    .range-input {
+      width: 100%;
+      accent-color: var(--secondary);
+      cursor: pointer;
+      min-height: 44px;
+    }
+    .tech-specs-list {
+      display: grid;
+      gap: var(--space-sm);
+      margin-top: var(--space-md);
+    }
+    .spec-row {
+      display: grid;
+      grid-template-columns: 155px minmax(0, 1fr);
+      gap: var(--space-sm);
+      padding-bottom: var(--space-sm);
+      border-bottom: 1px solid var(--outline-variant);
+      font-size: 0.9rem;
+    }
+    .spec-key {
+      font-family: var(--font-label);
+      font-size: 0.74rem;
+      text-transform: uppercase;
+      color: var(--secondary);
+      font-weight: 600;
+    }
+
+    /* Comparison Table */
+    .table-wrap {
+      overflow-x: auto;
+      background: var(--surface-container-low);
+      border: var(--card-border);
+      border-radius: var(--rounded-lg);
+      margin-top: var(--space-lg);
+    }
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+      text-align: left;
+    }
+    .data-table thead th {
+      background: var(--surface-container);
+      border-bottom: var(--section-rule);
+      font-family: var(--font-label);
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--on-surface);
+      padding: 0.75rem 0.9rem;
+      white-space: nowrap;
+    }
+    .data-table tbody td {
+      padding: 0.75rem 0.9rem;
+      border-bottom: 1px solid var(--outline-variant);
+      vertical-align: top;
+    }
+    .data-table tbody tr:last-child td {
+      border-bottom: none;
+    }
+    .data-table tbody tr.is-focal {
+      background: var(--warning-bg);
+    }
+
+    /* Section 2: Interview Guide */
+    .filter-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: end;
+      gap: var(--space-md);
+      background: var(--surface-container);
+      border-top: var(--section-rule);
+      padding: var(--space-md);
+      border-radius: 0 0 var(--rounded-lg) var(--rounded-lg);
+      margin-bottom: var(--space-lg);
+    }
+    .filter-field {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-xs);
+      min-width: 170px;
+      flex: 1 1 180px;
+    }
+    .filter-field label {
+      font-family: var(--font-label);
+      font-size: var(--label-size);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--on-surface-variant);
+    }
+    .select-control, .text-control {
+      min-height: 44px;
+      padding: 0.5rem 2rem 0.5rem 0.75rem;
+      background: var(--surface-container-low);
+      border: 1px solid var(--outline-variant);
+      border-radius: var(--rounded);
+      color: var(--on-surface);
+      font-size: 0.88rem;
+    }
+    .text-control {
+      padding-right: 0.75rem;
+    }
+
+    .interview-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr));
+      gap: var(--space-md);
+    }
+    .question-card {
+      background: var(--surface-container-low);
+      border: var(--card-border);
+      border-radius: var(--rounded-lg);
+      padding: var(--space-md);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-sm);
+    }
+    .q-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-sm);
+      padding-bottom: var(--space-xs);
+      border-bottom: 1px solid var(--outline-variant);
+    }
+    .q-code {
+      font-family: var(--font-label);
+      font-weight: 600;
+      font-size: 0.78rem;
+      color: var(--secondary);
+    }
+    .q-stage-tag {
+      font-family: var(--font-label);
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      background: var(--surface-container);
+      padding: 0.15rem 0.45rem;
+      border-radius: var(--badge-radius);
+      color: var(--on-surface-variant);
+    }
+    .tripartite-block {
+      display: grid;
+      gap: var(--space-xs);
+      font-size: 0.88rem;
+    }
+    .tri-item {
+      background: var(--surface-container);
+      padding: 0.5rem 0.65rem;
+      border-radius: var(--rounded);
+      border-left: 2.5px solid var(--secondary);
+    }
+    .tri-item.tri-decision {
+      border-left-color: var(--tertiary);
+    }
+    .tri-tag {
+      font-family: var(--font-label);
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--tertiary);
+      font-weight: 600;
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    /* Section 3: Interactive 4x4 Matrix */
+    .matrix-scroll {
+      overflow-x: auto;
+      padding-bottom: var(--space-xs);
+    }
+    .matrix-grid {
+      display: grid;
+      grid-template-columns: 185px repeat(4, minmax(210px, 1fr));
+      gap: var(--space-sm);
+      min-width: 960px;
+    }
+    .matrix-col-head {
+      background: var(--primary);
+      color: var(--on-primary);
+      padding: var(--space-sm) var(--space-md);
+      border-radius: var(--rounded);
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .matrix-col-head .stage-kicker {
+      font-family: var(--font-label);
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--primary-container);
+    }
+    .matrix-col-head .stage-name {
+      font-family: var(--font-headline);
+      font-weight: 600;
+      font-size: 1rem;
+    }
+    .matrix-corner {
+      background: var(--surface-container);
+      border: 1px solid var(--outline-variant);
+      border-radius: var(--rounded);
+      padding: var(--space-sm) var(--space-md);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .matrix-row-head {
+      background: var(--surface-container);
+      border-left: 4px solid var(--secondary);
+      border-radius: var(--rounded);
+      padding: var(--space-md);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 4px;
+    }
+    .matrix-row-head .dim-code {
+      font-family: var(--font-label);
+      font-weight: 600;
+      font-size: 0.78rem;
+      color: var(--secondary);
+      text-transform: uppercase;
+    }
+    .matrix-row-head .dim-title {
+      font-family: var(--font-headline);
+      font-weight: 600;
+      font-size: 1.02rem;
+      color: var(--on-surface);
+    }
+    .matrix-row-head .dim-sub {
+      font-size: 0.78rem;
+      color: var(--on-surface-variant);
+    }
+
+    .matrix-cell {
+      background: var(--surface-container-low);
+      border: 1px solid var(--outline-variant);
+      border-top-width: 4px;
+      border-radius: var(--rounded-lg);
+      padding: var(--space-md);
+      text-align: left;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: var(--space-sm);
+      min-height: 168px;
+      transition: transform var(--dur-micro) var(--ease-out), box-shadow var(--dur-micro) var(--ease-out), border-color var(--dur-micro) var(--ease-out);
+    }
+    .matrix-cell:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(23, 24, 26, 0.08);
+      border-color: var(--outline);
+    }
+    .matrix-cell.cell-green { border-top-color: var(--positive); }
+    .matrix-cell.cell-yellow { border-top-color: var(--warning); }
+    .matrix-cell.cell-red { border-top-color: var(--danger); }
+    .matrix-cell.is-dimmed {
+      opacity: 0.28;
+      filter: grayscale(0.4);
+    }
+    .matrix-cell.is-selected {
+      box-shadow: 0 0 0 2px var(--secondary);
+    }
+    .cell-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-xs);
+    }
+    .cell-code {
+      font-family: var(--font-label);
+      font-weight: 600;
+      font-size: 0.75rem;
+      color: var(--on-surface-variant);
+    }
+    .cell-title {
+      font-family: var(--font-headline);
+      font-weight: 600;
+      font-size: 0.96rem;
+      line-height: 1.25;
+      color: var(--on-surface);
+      margin: 0;
+    }
+    .cell-summary {
+      font-size: 0.8rem;
+      color: var(--on-surface-variant);
+      line-height: 1.45;
+      margin: 0;
+    }
+    .cell-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-xs);
+      padding-top: var(--space-xs);
+      border-top: 1px solid var(--outline-variant);
+      font-family: var(--font-label);
+      font-size: 0.7rem;
+      color: var(--secondary);
+    }
+    .audited-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      color: var(--positive);
+      font-weight: 600;
+    }
+
+    /* Inline Detail Inspector + Modal Support */
+    .cell-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: var(--overlay-bg);
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-md);
+    }
+    .cell-modal-backdrop.is-open {
+      display: flex;
+    }
+    .cell-modal {
+      background: var(--background);
+      border: 1.5px solid var(--outline);
+      border-radius: var(--rounded-lg);
+      max-width: 880px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: var(--modal-shadow);
+      padding: var(--space-lg);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-md);
+    }
+    .modal-topbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-sm);
+      padding-bottom: var(--space-sm);
+      border-bottom: var(--section-rule);
+    }
+    .modal-block {
+      background: var(--surface-container-low);
+      border: var(--card-border);
+      border-radius: var(--rounded-lg);
+      padding: var(--space-md);
+    }
+    .modal-block-title {
+      font-family: var(--font-label);
+      font-size: 0.76rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--secondary);
+      font-weight: 600;
+      margin: 0 0 var(--space-xs);
+      display: flex;
+      align-items: center;
+      gap: var(--space-xs);
+    }
+    .modal-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-sm);
+      padding-top: var(--space-sm);
+      border-top: 1px solid var(--outline-variant);
+    }
+
+    /* Section 4: Strategic Reflection */
+    .reflection-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr));
+      gap: var(--space-lg);
+    }
+    .reflection-card {
+      background: var(--surface-container-low);
+      border: var(--card-border);
+      border-top: 3px solid var(--secondary);
+      border-radius: var(--rounded-lg);
+      padding: var(--space-lg);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-sm);
+    }
+    .reflection-card.is-highlight {
+      border-top-color: var(--primary-container);
+    }
+    .reflection-head {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+    }
+    .reflection-title {
+      font-family: var(--font-headline);
+      font-weight: 600;
+      font-size: 1.15rem;
+      margin: 0;
+    }
+
+    /* Section 5: APA References */
+    .apa-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: var(--space-sm);
+    }
+    .apa-list li {
+      padding-left: 2rem;
+      text-indent: -2rem;
+      font-size: 0.9rem;
+      color: var(--on-surface);
+      padding-bottom: var(--space-xs);
+      border-bottom: 1px solid var(--outline-variant);
+    }
+    .apa-list li:last-child { border-bottom: none; }
+
+    /* Responsive adjustments */
+    @media (max-width: 900px) {
+      .analytics-split,
+      .tech-workspace {
+        grid-template-columns: 1fr;
+      }
+    }
+    @media (max-width: 640px) {
+      .page-grid {
+        padding: var(--space-md) var(--space-sm) var(--space-xl);
+        gap: var(--space-lg);
+      }
+      .spec-row {
+        grid-template-columns: 1fr;
+      }
+      .cell-modal {
+        padding: var(--space-md);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page-grid">
+
+    <!-- ENCABEZADO E INTRODUCCIÓN -->
+    <header id="sec-intro">
+      <div class="dossier-bar">
+        <div class="dossier-bar-left">
+          <span class="dossier-pill">CASO VARIOLUX · GRUPO 12</span>
+          <span class="dossier-meta">IMEC 3445 · INNOVACIÓN TECNOLÓGICA Y VIDRIOS INTELIGENTES · UNIANDES</span>
+        </div>
+        <span class="dossier-meta">22 DE NOVIEMBRE DE 2026</span>
+      </div>
+
+      <h1 class="title">Diagnóstico Integral de Madurez: Tecnología Fractal 2 (Inyección por Superficie 4)</h1>
+      <p class="standfirst">Evaluación multidimensional bajo el modelo «Del Lab al Mercado» (KTH Innovation Readiness Level™ / Universidad de los Andes) — María Carolina Malagón &amp; Salma Sophia Ospina</p>
+      <p class="lead-copy">
+        Este tablero analítico sintetiza la auditoría de innovación de <strong>Fractal 2</strong>, sistema de iluminación integrada en vidrio laminado desarrollado por <strong>AGP (2020–2024)</strong> para techos panorámicos automotrices. A partir de la evidencia técnica de la patente <strong>US 2025/0180794 A1</strong> y las entrevistas de campo con Andrés Sarmiento (2024), se caracterizan las <strong>16 informaciones clave</strong> en las cuatro etapas del ciclo de innovación y cuatro subdimensiones asignadas.
+      </p>
+
+      <div class="hero-meta-grid">
+        <div class="meta-block">
+          <span class="meta-label">Equipo Investigador (Grupo 12)</span>
+          <span class="meta-val">María Carolina Malagón (202320986) · Salma Sophia Ospina (202321153)</span>
+        </div>
+        <div class="meta-block">
+          <span class="meta-label">Tecnología Asignada</span>
+          <span class="meta-val">Fractal 2 — Inyección óptica por Superficie 4 (2020–2024)</span>
+        </div>
+        <div class="meta-block">
+          <span class="meta-label">Subdimensiones Evaluadas</span>
+          <span class="meta-val">TRL (Funcionalidad) · IPRL (Prop. Intelectual) · MRL (Manufactura) · BRL (Competencia)</span>
+        </div>
+        <div class="meta-block">
+          <span class="meta-label">Marco Metodológico</span>
+          <span class="meta-val">4 Etapas KTH / Uniandes: Exploración, Estructuración, Validación e Implementación</span>
+        </div>
+      </div>
+
+      <nav class="quick-nav" aria-label="Navegación de secciones del dossier">
+        <a class="nav-link" href="#sec-resumen">00 · Resumen &amp; KPIs</a>
+        <a class="nav-link" href="#sec-tecnologias">01 · Tecnologías</a>
+        <a class="nav-link" href="#sec-entrevista">02 · Guía de Entrevista (16)</a>
+        <a class="nav-link" href="#sec-matriz">03 · Matriz 4×4 (Dashboard)</a>
+        <a class="nav-link" href="#sec-reflexion">04 · Reflexión Estratégica</a>
+        <a class="nav-link" href="#sec-referencias">05 · Referencias APA</a>
+      </nav>
+    </header>
+
+    <!-- RESUMEN EJECUTIVO & KPIs -->
+    <section id="sec-resumen" aria-labelledby="title-resumen">
+      <div class="dossier-bar">
+        <div class="dossier-bar-left">
+          <span class="dossier-pill">00 · DIAGNÓSTICO GLOBAL</span>
+          <span class="dossier-meta">SÍNTESIS CUANTITATIVA DEL SEMÁFORO 4×4</span>
+        </div>
+      </div>
+
+      <div class="kpi-grid">
+        <article class="figure-card">
+          <div class="kpi-label">
+            <span>Evidencia Completa (Verde)</span>
+            <span class="sem-badge sem-green"><span class="sem-dot"></span>8 / 16</span>
+          </div>
+          <div class="value">50.0%</div>
+          <p class="kpi-sub">TRL completo hasta PMV (Etapas 1–3) e IPRL consolidado en Etapas 2–4 con patente publicada y estrategia dual.</p>
+        </article>
+
+        <article class="figure-card">
+          <div class="kpi-label">
+            <span>Evidencia Parcial (Amarillo)</span>
+            <span class="sem-badge sem-yellow"><span class="sem-dot"></span>5 / 16</span>
+          </div>
+          <div class="value">31.3%</div>
+          <p class="kpi-sub">Brechas de soporte documental en vigilancia inicial (IPRL 1), costeo ABC / FAI (MRL 2–3) y matrices NABC/USP (BRL 1–2).</p>
+        </article>
+
+        <article class="figure-card">
+          <div class="kpi-label">
+            <span>Detenido / Sin Evidencia (Rojo)</span>
+            <span class="sem-badge sem-red"><span class="sem-dot"></span>3 / 16</span>
+          </div>
+          <div class="value">18.7%</div>
+          <p class="kpi-sub">Congelamiento simultáneo en Etapa 4 (Implementación) para TRL 4, MRL 4 y BRL 4 tras cierre operativo y retorno de $0.</p>
+        </article>
+
+        <article class="figure-card">
+          <div class="kpi-label">
+            <span>Protección de PI Alcanzada</span>
+            <span class="sem-badge sem-green"><span class="sem-dot"></span>PCT + US</span>
+          </div>
+          <div class="value">US 2025/0180794 A1</div>
+          <p class="kpi-sub">Prioridad US 63/310,642 (feb. 2022), ruta PCT/IB2023/051425 (feb. 2023) y FTO Solución 9 aprobada sin infracción.</p>
+        </article>
+      </div>
+
+      <div class="analytics-split" style="margin-top: var(--space-lg);">
+        <div class="figure-card">
+          <div class="chart-header">
+            <div>
+              <h2 class="chart-title" id="title-resumen">Perfil de Asincronía en la Madurez (Etapas 1 a 4)</h2>
+              <span class="dossier-meta">Puntaje por estado de evidencia: Verde = 2 pts · Amarillo = 1 pt · Rojo = 0 pts</span>
+            </div>
+            <div style="display: flex; gap: var(--space-xs);">
+              <button type="button" class="btn btn-secondary is-active" id="btn-chart-bar" onclick="switchChartMode('bar')">Barras por Dimensión</button>
+              <button type="button" class="btn btn-secondary" id="btn-chart-radar" onclick="switchChartMode('radar')">Radar de Asincronía</button>
+            </div>
+          </div>
+          <div class="chart-box">
+            <canvas id="readinessChart" aria-label="Gráfico comparativo de madurez por subdimensión y etapa"></canvas>
+          </div>
+        </div>
+
+        <aside class="aside-box" aria-label="Control de auditoría y exportación">
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: var(--space-sm); margin-bottom: var(--space-sm);">
+            <span class="dossier-meta" style="color: var(--secondary); font-weight: 600;">BITÁCORA DE AUDITORÍA INTERACTIVA</span>
+            <span class="index-num" id="audit-progress-badge">0 / 16 REVISADAS</span>
+          </div>
+          <h3 style="font-family: var(--font-headline); font-size: 1.12rem; margin: 0 0 var(--space-xs);">Control de Exploración y Exportación</h3>
+          <p style="font-size: 0.88rem; color: var(--on-surface-variant); margin: 0 0 var(--space-md);">
+            Al inspeccionar cualquier casilla de la Matriz 4×4, puede marcarla como auditada y registrar observaciones técnicas. Su progreso se guarda automáticamente en la sesión.
+          </p>
+
+          <div style="display: grid; gap: var(--space-xs); margin-bottom: var(--space-md);">
+            <div style="display: flex; justify-content: space-between; font-size: 0.84rem; padding: 0.35rem 0; border-bottom: 1px solid var(--outline-variant);">
+              <span>TRL · Funcionalidad</span>
+              <span style="font-family: var(--font-label);">V · V · V · R</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.84rem; padding: 0.35rem 0; border-bottom: 1px solid var(--outline-variant);">
+              <span>IPRL · Propiedad Intelectual</span>
+              <span style="font-family: var(--font-label);">A · V · V · V</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.84rem; padding: 0.35rem 0; border-bottom: 1px solid var(--outline-variant);">
+              <span>MRL · Manufactura</span>
+              <span style="font-family: var(--font-label);">V · A · A · R</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.84rem; padding: 0.35rem 0;">
+              <span>BRL · Competencia</span>
+              <span style="font-family: var(--font-label);">A · A · V · R</span>
+            </div>
+          </div>
+
+          <div style="display: flex; flex-wrap: wrap; gap: var(--space-sm);">
+            <button type="button" class="btn btn-primary" onclick="exportAuditCSV()">
+              <i data-lucide="download" style="width:16px;height:16px;"></i> Exportar Matriz CSV
+            </button>
+            <button type="button" class="btn btn-secondary" id="btn-reset-audit" onclick="handleResetAudit(this)">
+              Reiniciar Auditoría
+            </button>
+          </div>
+          <p id="audit-status-msg" style="font-size: 0.8rem; color: var(--secondary); margin: var(--space-sm) 0 0; min-height: 1.2em;"></p>
+        </aside>
+      </div>
+    </section>
+
+    <!-- SECCIÓN 1: CAPÍTULO DE TECNOLOGÍAS -->
+    <section id="sec-tecnologias" aria-labelledby="title-tecnologias">
+      <div class="dossier-bar">
+        <div class="dossier-bar-left">
+          <span class="dossier-pill">01 · CAPÍTULO DE TECNOLOGÍAS</span>
+          <span class="dossier-meta">ARQUITECTURA FÍSICO-MECÁNICA, ELÉCTRICA Y ÓPTICA DEL CASO VARIOLUX</span>
+        </div>
+      </div>
+
+      <h2 class="section-title" id="title-tecnologias">Evolución de las Tecnologías de Vidrio Inteligente en Variolux</h2>
+      <p class="section-deck">Seleccione cada tecnología para inspeccionar su sección transversal, simular su principio físico-óptico o eléctrico y contrastar su arquitectura en el producto GM.</p>
+
+      <div class="tech-tabs" role="tablist" aria-label="Selector de tecnologías del caso Variolux" style="margin-top: var(--space-md);">
+        <button type="button" role="tab" aria-selected="false" class="btn btn-secondary" id="tab-vario" onclick="selectTech('vario')">
+          1. Vario Plus (Vidrio SPD)
+        </button>
+        <button type="button" role="tab" aria-selected="false" class="btn btn-secondary" id="tab-fractal1" onclick="selectTech('fractal1')">
+          2. Fractal 1 (Inyección por Borde)
+        </button>
+        <button type="button" role="tab" aria-selected="true" class="btn btn-secondary is-active" id="tab-fractal2" onclick="selectTech('fractal2')">
+          3. Fractal 2 (Superficie 4 · Asignada)
+        </button>
+      </div>
+
+      <div class="tech-workspace">
+        <!-- Interactive Schematic & Physics Simulator -->
+        <div class="tech-diagram-card">
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: var(--space-sm); margin-bottom: var(--space-sm);">
+            <span class="dossier-meta" id="diag-kicker">ESQUEMA ÓPTICO-MECÁNICO · FRACTAL 2 (US 2025/0180794 A1)</span>
+            <span class="index-num" id="diag-readout">TIR ACTIVO · 12V CC</span>
+          </div>
+
+          <div class="diagram-stage" id="diagram-svg-container">
+            <!-- Rendered dynamically by selectTech() -->
+          </div>
+
+          <div class="diagram-controls" id="diagram-controls">
+            <!-- Dynamic interactive controls per technology -->
+          </div>
+        </div>
+
+        <!-- Technical Deep Dive -->
+        <article class="figure-card" id="tech-detail-panel">
+          <!-- Rendered dynamically by selectTech() -->
+        </article>
+      </div>
+
+      <!-- Comparative Table -->
+      <div class="table-wrap">
+        <table class="data-table" aria-label="Matriz comparativa físico-técnica entre Vario Plus, Fractal 1 y Fractal 2">
+          <thead>
+            <tr>
+              <th>Parámetro Técnico</th>
+              <th>Vario Plus (SPD · 2015–2020)</th>
+              <th>Fractal 1 (Borde · 2018–2023)</th>
+              <th>Fractal 2 (Superficie 4 · 2020–2024)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Estructura del Vidrio</strong></td>
+              <td>Laminado con película fotopolimérica intermedia (~90 µm) y electrodos transparentes ITO.</td>
+              <td>Laminado <strong>asimétrico</strong> con corte en voladizo (<em>step-cut</em>) y muescas profundas en bordes.</td>
+              <td>Laminado <strong>plano simétrico estándar</strong>: 2.3 mm + PVB 0.76 mm + 3.0 mm (sin corte en voladizo).</td>
+            </tr>
+            <tr>
+              <td><strong>Mecanismo Eléctrico</strong></td>
+              <td>Voltaje alterno <strong>0–110V AC</strong> (típico 60–100V AC; 0.6–1.2 W/m²).</td>
+              <td>Tiras de <strong>LED SMD</strong> encapsuladas directamente en el canto del vidrio.</td>
+              <td>Módulo <strong>LED desmontable a 12V CC</strong> montado sobre la superficie 4 interna.</td>
+            </tr>
+            <tr>
+              <td><strong>Principio Físico-Óptico</strong></td>
+              <td>Alineación dipolar de partículas de herapatita bajo campo eléctrico AC (VLT <strong>1% a 65%</strong>).</td>
+              <td>Inyección lateral por canto con propagación por Reflexión Total Interna (TIR) hacia tinta dispersora.</td>
+              <td>Inyección diagonal en superficie 4 mediante cavidades cónicas/cilíndricas con <em>filler 28</em> (<var>n₂</var>) y <em>cladding 48</em> (<var>n₁</var>), cumpliendo <var>n₁ &lt; n₂ ≥ n₃</var>.</td>
+            </tr>
+            <tr>
+              <td><strong>Integración Carrocería</strong></td>
+              <td>Estándar automotriz como capa conmutable en el techo panorámico (Producto GM).</td>
+              <td>Deficiencias mecánicas en bordes, tolerancias críticas y dificultad para pegado directo con poliuretano.</td>
+              <td>Pegado directo tradicional con poliuretano al marco vehicular; preserva estética limpia en apagado.</td>
+            </tr>
+            <tr class="is-focal">
+              <td><strong>Mantenibilidad y Yield</strong></td>
+              <td>Tecnología madura solicitada por nombre por el cliente OEM.</td>
+              <td>Falla de LED obliga a descartar toda la pieza laminada ($4,000–$5,000 USD por unidad).</td>
+              <td>Bloque LED 12V CC reemplazable sin desechar el vidrio; incremento sustancial del <em>yield</em> piloto.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SECCIÓN 2: GUÍA DE ENTREVISTA ESTRUCTURADA -->
+    <section id="sec-entrevista" aria-labelledby="title-entrevista">
+      <div class="dossier-bar">
+        <div class="dossier-bar-left">
+          <span class="dossier-pill">02 · GUÍA DE ENTREVISTA ESTRUCTURADA</span>
+          <span class="dossier-meta">CUESTIONARIO DE 16 PREGUNTAS · FÓRMULA TRIPARTITA DE INDAGACIÓN</span>
+        </div>
+      </div>
+
+      <h2 class="section-title" id="title-entrevista">Instrumento de Campo (Andrés Sarmiento · AGP)</h2>
+      <p class="section-deck">Cuestionario organizado por las cuatro etapas del modelo «Del Lab al Mercado», estructurado en tres niveles de verificación: Qué se generó, Cómo se evidenció y Toma de decisiones (Gobernanza de Hito del Comité I+D).</p>
+
+      <div class="filter-toolbar" style="margin-top: var(--space-md);">
+        <div class="filter-field">
+          <label for="q-filter-stage">Filtrar por Etapa</label>
+          <select id="q-filter-stage" class="select-control" onchange="renderQuestions()">
+            <option value="all">Todas las Etapas (16 preguntas)</option>
+            <option value="1">Etapa 1 · Exploración (4)</option>
+            <option value="2">Etapa 2 · Estructuración (4)</option>
+            <option value="3">Etapa 3 · Validación (4)</option>
+            <option value="4">Etapa 4 · Implementación (4)</option>
+          </select>
+        </div>
+        <div class="filter-field">
+          <label for="q-filter-dim">Filtrar por Subdimensión</label>
+          <select id="q-filter-dim" class="select-control" onchange="renderQuestions()">
+            <option value="all">Todas las Subdimensiones</option>
+            <option value="TRL">TRL · Funcionalidad</option>
+            <option value="IPRL">IPRL · Propiedad Intelectual</option>
+            <option value="MRL">MRL · Manufactura</option>
+            <option value="BRL">BRL · Competencia</option>
+          </select>
+        </div>
+        <div class="filter-field" style="flex: 0 0 auto;">
+          <label for="q-reset-btn">Acción</label>
+          <button type="button" id="q-reset-btn" class="btn btn-secondary" onclick="resetQuestionFilters()">Mostrar las 16</button>
+        </div>
+      </div>
+
+      <div class="interview-grid" id="interview-grid">
+        <!-- Rendered by renderQuestions() -->
+      </div>
+    </section>
+
+    <!-- SECCIÓN 3: MATRIZ INTERACTIVA 4x4 E INFORMACIONES -->
+    <section id="sec-matriz" aria-labelledby="title-matriz">
+      <div class="dossier-bar">
+        <div class="dossier-bar-left">
+          <span class="dossier-pill">03 · MATRIZ 4×4 DEL LAB AL MERCADO</span>
+          <span class="dossier-meta">DASHBOARD PRINCIPAL · 16 INFORMACIONES CARACTERIZADAS DE FRACTAL 2</span>
+        </div>
+      </div>
+
+      <h2 class="section-title" id="title-matriz">Mapa Interactivo de Madurez y Evidencia (16 Casillas)</h2>
+      <p class="section-deck">Filtre por etapa, subdimensión o estado del semáforo y haga clic en cualquier casilla para abrir el expediente completo (Sustento KTH/Uniandes, Evidencia de Caso, Instrumento Industrial Externo y Justificación del Semáforo).</p>
+
+      <div class="filter-toolbar" style="margin-top: var(--space-md);">
+        <div class="filter-field">
+          <label for="m-filter-stage">Etapa del Modelo</label>
+          <select id="m-filter-stage" class="select-control" onchange="applyMatrixFilters()">
+            <option value="all">Todas las Etapas (E1–E4)</option>
+            <option value="1">Etapa 1 · Exploración</option>
+            <option value="2">Etapa 2 · Estructuración</option>
+            <option value="3">Etapa 3 · Validación</option>
+            <option value="4">Etapa 4 · Implementación</option>
+          </select>
+        </div>
+        <div class="filter-field">
+          <label for="m-filter-dim">Subdimensión</label>
+          <select id="m-filter-dim" class="select-control" onchange="applyMatrixFilters()">
+            <option value="all">Todas (TRL, IPRL, MRL, BRL)</option>
+            <option value="TRL">TRL · Funcionalidad</option>
+            <option value="IPRL">IPRL · Propiedad Intelectual</option>
+            <option value="MRL">MRL · Manufactura</option>
+            <option value="BRL">BRL · Competencia</option>
+          </select>
+        </div>
+        <div class="filter-field">
+          <label for="m-filter-status">Semáforo de Evidencia</label>
+          <select id="m-filter-status" class="select-control" onchange="applyMatrixFilters()">
+            <option value="all">Todos los Semáforos (16)</option>
+            <option value="green">Verde · Evidencia completa (8)</option>
+            <option value="yellow">Amarillo · Evidencia parcial (5)</option>
+            <option value="red">Rojo · Faltante / Detenido (3)</option>
+          </select>
+        </div>
+        <div class="filter-field">
+          <label for="m-filter-search">Buscar palabra clave</label>
+          <input type="text" id="m-filter-search" class="text-control" placeholder="Ej. Solución 9, Mercedes, OEE…" oninput="applyMatrixFilters()">
+        </div>
+        <div class="filter-field" style="flex: 0 0 auto;">
+          <label for="m-reset-btn">Restablecer</label>
+          <button type="button" id="m-reset-btn" class="btn btn-secondary" onclick="resetMatrixFilters()">Limpiar Filtros</button>
+        </div>
+      </div>
+
+      <div class="matrix-scroll">
+        <div class="matrix-grid" id="matrix-grid" role="grid" aria-label="Matriz 4x4 de madurez de Fractal 2">
+          <!-- Rendered by renderMatrix() -->
+        </div>
+      </div>
+    </section>
+
+    <!-- SECCIÓN 4: REFLEXIÓN DE CIERRE -->
+    <section id="sec-reflexion" aria-labelledby="title-reflexion">
+      <div class="dossier-bar">
+        <div class="dossier-bar-left">
+          <span class="dossier-pill">04 · REFLEXIÓN ESTRATÉGICA DE CIERRE</span>
+          <span class="dossier-meta">SÍNTESIS ANALÍTICA · ASINCRONÍA, PI DUAL Y VALLE DE LA MUERTE</span>
+        </div>
+      </div>
+
+      <h2 class="section-title" id="title-reflexion">Lecciones Estructurales del Paso «Del Lab al Mercado» en Fractal 2</h2>
+      <p class="section-deck">Interpretación integradora de por qué una tecnología ópticamente robusta y sólidamente patentada quedó detenida en la transición pre-comercial.</p>
+
+      <div class="reflection-grid" style="margin-top: var(--space-md);">
+        <article class="reflection-card">
+          <div class="reflection-head">
+            <span class="index-num">01</span>
+            <h3 class="reflection-title">Asincronía en la Maduración Tecnológica</h3>
+          </div>
+          <p>
+            El manual KTH advierte que brechas superiores a <strong>2 o 3 niveles</strong> entre escalas de madurez inhiben la llegada al mercado. Fractal 2 exhibe una asincronía pronunciada: mientras <strong>IPRL alcanzó Etapa 4 (Verde)</strong> con la radicación PCT, FTO limpio y publicación en EE. UU., y <strong>TRL llegó a Etapa 3 (Verde)</strong> mediante prototipos funcionales de superficie 4, la dimensión de <strong>Manufactura (MRL)</strong> arrastró vacíos de costeo ABC y complejidad en la integración industrial de la guía de luz.
+          </p>
+          <p style="color: var(--on-surface-variant); font-size: 0.9rem; margin: 0;">
+            <strong>Conclusión:</strong> La excelencia inventiva en laboratorio e ingeniería legal no compensa la ausencia de capacidad productiva repetible ni el control de tolerancias seriadas exigido en Etapa 4.
+          </p>
+        </article>
+
+        <article class="reflection-card is-highlight">
+          <div class="reflection-head">
+            <span class="index-num">02</span>
+            <h3 class="reflection-title">Dialéctica entre Patentes y Secretos Industriales</h3>
+          </div>
+          <p>
+            AGP resolvió la tensión entre divulgación y protección mediante una arquitectura de PI bifurcada. El <strong>ensamble de inyección óptica</strong> (carcasa 50, cavidades, <em>filler 28</em> y <em>cladding 48</em> en superficie 4) se protegió vía <strong>Patente de Producto (US 2025/0180794 A1)</strong> porque es físicamente auditable mediante ingeniería inversa en vehículos competidores.
+          </p>
+          <p style="color: var(--on-surface-variant); font-size: 0.9rem; margin: 0;">
+            En contraste, la <strong>formulación química de la tinta inorgánica</strong> y las <strong>curvas térmicas de horno</strong> se resguardaron como <strong>Secreto Industrial y NDAs</strong>, evitando entregar a los competidores la «receta» exacta dentro de la memoria pública de la patente.
+          </p>
+        </article>
+
+        <article class="reflection-card">
+          <div class="reflection-head">
+            <span class="index-num">03</span>
+            <h3 class="reflection-title">El Valle de la Muerte Tier 1: Mercedes-Benz y GM</h3>
+          </div>
+          <p>
+            La frontera entre las Etapas 3 y 4 condensó el <em>Valle de la Muerte</em> del sector automotriz Tier 1. Ante <strong>Mercedes-Benz</strong>, aunque el concepto fue evaluado como PMV, <strong>Saint-Gobain</strong> ganó la adjudicación comercial al cumplir tolerancias más estrictas de uniformidad cromática y luminancia. Con <strong>General Motors</strong>, se logró co-especificación técnica en el techo de muy bajo volumen (Producto GM junto a Vario Plus).
+          </p>
+          <p style="color: var(--on-surface-variant); font-size: 0.9rem; margin: 0;">
+            Sin embargo, la complejidad de ensamble en superficie 4 y la reestructuración y cierre operativo de <strong>AGP Inglas</strong> impidieron el escalamiento a planta, dejando un valioso activo patentado pero con un <strong>retorno financiero comercial directo de $0</strong>.
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <!-- SECCIÓN 5: REFERENCIAS BIBLIOGRÁFICAS APA -->
+    <section id="sec-referencias" aria-labelledby="title-referencias">
+      <div class="dossier-bar">
+        <div class="dossier-bar-left">
+          <span class="dossier-pill">05 · REFERENCIAS BIBLIOGRÁFICAS</span>
+          <span class="dossier-meta">FORMATO APA (7.ª EDICIÓN) · FUENTES PRIMARIAS Y DE INDUSTRIA</span>
+        </div>
+      </div>
+
+      <h2 class="section-title" id="title-referencias">Referencias Formales</h2>
+      <div class="figure-card" style="margin-top: var(--space-md);">
+        <ul class="apa-list">
+          <li>AGP. (2025). <em>Vehicle glazing with surface light injection</em> (Publicación de solicitud de patente de EE. UU. núm. US 2025/0180794 A1; prioridad provisional US 63/310,642; solicitud internacional PCT/IB2023/051425). Oficina de Patentes y Marcas de Estados Unidos (USPTO).</li>
+          <li>Aulet, B. (2013). <em>Disciplined Entrepreneurship: 24 Steps to a Successful Startup</em>. John Wiley &amp; Sons.</li>
+          <li>KTH Innovation. (2020). <em>The KTH Innovation Readiness Level™ Model – User Guide</em>. KTH Royal Institute of Technology.</li>
+          <li>Malagón, M. C., &amp; Ospina, S. S. (2026). <em>Caracterización completa del Caso Variolux – Tecnología Fractal 2</em> (Informe del Grupo 12, IMEC 3445 Innovación Tecnológica y Vidrios Inteligentes). Departamento de Ingeniería Mecánica, Universidad de los Andes.</li>
+          <li>McClure, D. (2007). <em>Startup Metrics for Pirates (AARRR)</em>. 500 Startups.</li>
+          <li>Nakajima, S. (1988). <em>Introduction to TPM: Total Productive Maintenance</em>. Productivity Press.</li>
+          <li>Reeves, R. (1961). <em>Reality in Advertising</em>. Alfred A. Knopf.</li>
+          <li>Sarmiento, A. (2024). <em>Notas de entrevista de campo sobre el Caso Variolux y el desarrollo de Fractal 2 en AGP</em> [Comunicación personal y sesiones estructuradas de curso]. Universidad de los Andes.</li>
+          <li>Spruijt, J. (s. f.). <em>Overview of Innovation Methods</em>. Innovative Dutch.</li>
+          <li>Universidad de los Andes. (2024). <em>Biblioteca de Información del Modelo Del Lab al Mercado – Vidrios Inteligentes (IMEC 3445)</em> [Material docente]. Departamento de Ingeniería Mecánica.</li>
+          <li>Wijewardane, S., &amp; Santamouris, M. (2025). Smart glazing systems: An industrial outlook. <em>Solar Compass</em>, 14, 100114.</li>
+        </ul>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- MODAL INSPECTOR DE CASILLA (MATRIZ 4x4) -->
+  <div class="cell-modal-backdrop" id="cell-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-cell-title" onclick="handleBackdropClick(event)">
+    <div class="cell-modal" id="cell-modal">
+      <div class="modal-topbar">
+        <div style="display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-sm);">
+          <span class="dossier-pill" id="modal-cell-code">TRL 1</span>
+          <span class="dossier-meta" id="modal-cell-stage">ETAPA 1 · EXPLORACIÓN</span>
+          <span class="sem-badge sem-green" id="modal-cell-badge"><span class="sem-dot"></span>VERDE</span>
+        </div>
+        <button type="button" class="btn btn-secondary" id="modal-close-btn" onclick="closeCellModal()" aria-label="Cerrar detalle de casilla">
+          Cerrar (Esc)
+        </button>
+      </div>
+
+      <div>
+        <h2 class="section-title" id="modal-cell-title" style="font-size: 1.45rem;">Título de la Casilla</h2>
+        <p class="section-deck" id="modal-cell-subdim">Subdimensión</p>
+      </div>
+
+      <div class="modal-block">
+        <h3 class="modal-block-title">A. Descripción Sustantiva del Hito (Modelo KTH / Uniandes)</h3>
+        <div id="modal-desc-kth"></div>
+      </div>
+
+      <div class="modal-block">
+        <h3 class="modal-block-title">B. Evidencia del Caso (Sarmiento, 2024 &amp; Patente US 2025/0180794 A1)</h3>
+        <div id="modal-evidence-case"></div>
+      </div>
+
+      <div class="modal-block">
+        <h3 class="modal-block-title">C. Ejemplo e Instrumentos de la Industria Ajenos a AGP</h3>
+        <div id="modal-industry-example"></div>
+      </div>
+
+      <div class="modal-block" id="modal-semaphore-box">
+        <h3 class="modal-block-title">D. Justificación del Semáforo Asignado</h3>
+        <div id="modal-semaphore-reason"></div>
+      </div>
+
+      <div class="aside-box" style="border-radius: var(--rounded-lg);">
+        <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-sm); margin-bottom: var(--space-sm);">
+          <label for="modal-audit-note" class="control-label" style="margin: 0;">Nota de Auditoría Personal (Persistente en Sesión)</label>
+          <button type="button" class="btn btn-secondary" id="modal-toggle-audit" onclick="toggleCurrentCellAudit()">
+            Marcar como Auditada
+          </button>
+        </div>
+        <textarea id="modal-audit-note" class="text-control" rows="2" style="width: 100%; resize: vertical;" placeholder="Escriba aquí observaciones o verificaciones sobre esta casilla…" oninput="saveCurrentCellNote(this.value)"></textarea>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" id="modal-prev-btn" onclick="navigateModal(-1)">← Casilla Anterior</button>
+        <span class="dossier-meta" id="modal-counter">1 / 16</span>
+        <button type="button" class="btn btn-primary" id="modal-next-btn" onclick="navigateModal(1)">Siguiente Casilla →</button>
+      </div>
+    </div>
+  </div>
+
+  <api-shim></api-shim>
+
+  <script>
+    // =========================================================================
+    // DATA MODEL: 16 MATRIX CELLS (SYNCHRONIZED 100% WITH GRUPO 12 REPORT)
+    // =========================================================================
+    const MATRIX_CELLS = [
+      // ROW 1: TRL (V, V, V, R)
+      {
+        id: `TRL-1`,
+        dim: `TRL`,
+        dimName: `TRL · Funcionalidad (Objeto de la Innovación)`,
+        stage: 1,
+        stageName: `Etapa 1 · Exploración`,
+        status: `green`,
+        statusLabel: `Verde`,
+        title: `Concepto técnico descrito (Inyección por Superficie 4 y TIR)`,
+        shortSummary: `Formulación de la inyección diagonal por superficie 4 con vidrio simétrico y Reflexión Total Interna (n₁ < n₂ ≥ n₃).`,
+        kthDesc: `Definición teórica del principio físico e ingenieril que gobierna el sistema de segunda generación. Explica cómo la onda luminosa se acopla y viaja dentro del laminado preservando la transparencia total en estado apagado, identificando las funciones críticas del concepto sin exigir aún prototipos físicos.`,
+        caseEvidence: `<p>Según las notas de entrevista de campo con Andrés Sarmiento (2024), Fractal 1 exigía muescas profundas en los bordes donde la lámina exterior sobresalía de la interior, debilitando mecánicamente el contorno. En 2020, para Fractal 2 se concibió la inyección angular de luz a través de la <strong>superficie 4</strong> sobre un vidrio laminado plano simétrico estándar.</p><p>La patente <strong>US 2025/0180794 A1</strong> (AGP, 2025) formaliza el principio óptico: una carcasa (<em>housing 50</em>) integra cavidades cónicas/cilíndricas con polímero óptico (<em>filler 28</em>, índice <var>n₂</var>) y revestimiento (<em>cladding 48</em>, índice <var>n₁</var>) cumpliendo <var>n₁ &lt; n₂ ≥ n₃</var> (<var>n₃ ≈ 1.52</var> del vidrio soda-lime), asegurando Reflexión Total Interna (TIR) hacia la tinta inorgánica dispersora.</p>`,
+        industryExample: `<strong>Whitepaper de Arquitectura Optoelectrónica y Análisis de Trazado de Rayos (Ray Tracing):</strong> Documentación estándar de laboratorio óptico que modela la Ley de Snell (<var>nᵢ sin θᵢ = nₜ sin θₜ</var>) para determinar el ángulo crítico (<var>θc = arcsin(n₁/n₂)</var>) y simular pérdidas de Fresnel en software óptico CAD (ej. Zemax / LightTools) antes de cortar vidrio.`,
+        semaphoreReason: `<strong>Verde (Evidencia completa):</strong> El principio físico, la arquitectura laminar y la relación de índices de refracción están plenamente descritos y verificados tanto en las notas de entrevista (Sarmiento, 2024) como en las reivindicaciones técnicas de la patente US 2025/0180794 A1.`
+      },
+      {
+        id: `TRL-2`,
+        dim: `TRL`,
+        dimName: `TRL · Funcionalidad (Objeto de la Innovación)`,
+        stage: 2,
+        stageName: `Etapa 2 · Estructuración`,
+        status: `green`,
+        statusLabel: `Verde`,
+        title: `Prueba de concepto en laboratorio (Light Bar y DoE óptico)`,
+        shortSummary: `Prototipo light bar de 12V CC acoplado en superficie 4 con validación cuantitativa de transmisión y transparencia base.`,
+        kthDesc: `Demostración repetible de las funciones críticas en un banco de pruebas de laboratorio con componentes integrados. Confirma que las métricas de desempeño óptico y eléctrico son cuantificables y reproducibles aunque el prototipo tenga menor fidelidad dimensional que el producto final.`,
+        caseEvidence: `<p>De acuerdo con la entrevista de campo (Sarmiento, 2024), el equipo de I+D construyó barras de prueba luminosas (<em>light bars</em>) acoplando módulos LED de <strong>12V CC</strong> en la superficie 4 de un vidrio laminado simétrico (2.3 mm + PVB 0.76 mm + 3.0 mm).</p><p>Las pruebas en banco óptico confirmaron la eficiencia de inyección por TIR y la dispersión homogénea mediante la tinta inorgánica interna, verificando cuantitativamente en laboratorio que el sistema no alteraba la transmitancia visual (VLT) ni el desempeño térmico del vidrio cuando permanecía apagado.</p>`,
+        industryExample: `<strong>Informe de Banco de Pruebas con Diseño de Experimentos (DoE) y Espectrofotometría:</strong> Reporte normalizado (ASTM E903 / ISO 9050) empleando esfera integradora y luminancímetro calibrado para medir flujo luminoso (cd/m² o nits), uniformidad espacial y coordenadas cromáticas CIE <var>L*a*b*</var> bajo distintos ángulos de cavidad.`,
+        semaphoreReason: `<strong>Verde (Evidencia completa):</strong> Las funciones optoelectrónicas críticas se demostraron de forma repetible en laboratorio sobre prototipos funcionales integrados, validando la viabilidad del acoplamiento por superficie 4.`
+      },
+      {
+        id: `TRL-3`,
+        dim: `TRL`,
+        dimName: `TRL · Funcionalidad (Objeto de la Innovación)`,
+        stage: 3,
+        stageName: `Etapa 3 · Validación`,
+        status: `green`,
+        statusLabel: `Verde`,
+        title: `Completitud de requisitos y PMV en entorno relevante`,
+        shortSummary: `Techos panorámicos funcionales a escala real integrados con módulo desmontable y validados con OEMs (GM y Mercedes).`,
+        kthDesc: `Construcción del Producto Mínimo Viable (PMV) y ejecución de ensayos en un entorno relevante que reproduce las exigencias mecánicas, ambientales y de integración de la aplicación final, asegurando completitud de requisitos funcionales.`,
+        caseEvidence: `<p>Las notas de entrevista (Sarmiento, 2024) confirman que AGP fabricó techos panorámicos a escala vehicular completa integrando el módulo LED desmontable en superficie 4 sobre vidrio simétrico apto para pegado directo con poliuretano.</p><p>El PMV superó ensayos relevantes de ciclado térmico, vibración y estanqueidad automotriz, y fue evaluado en condiciones representativas por fabricantes OEM reales: integrado como tecnología de iluminación en el vehículo de muy bajo volumen del <strong>Producto GM (General Motors)</strong> y presentado en evaluación competitiva ante <strong>Mercedes-Benz</strong>.</p>`,
+        industryExample: `<strong>Protocolo Ambiental Automotriz MIL-STD-810G / SAE J1455 y Matriz de Verificación de Requisitos (RVM):</strong> Ensayos acreditados por terceros de vibración aleatoria multieje, choque térmico (-40 °C a +85 °C), humedad condensante y envejecimiento UV acelerado (ISO 11341) para validar durabilidad antes de producción.`,
+        semaphoreReason: `<strong>Verde (Evidencia completa):</strong> Existió PMV físico a escala real, completó pruebas representativas del entorno vehicular y fue sometido directamente a evaluación funcional por clientes OEM.`
+      },
+      {
+        id: `TRL-4`,
+        dim: `TRL`,
+        dimName: `TRL · Funcionalidad (Objeto de la Innovación)`,
+        stage: 4,
+        stageName: `Etapa 4 · Implementación`,
+        status: `red`,
+        statusLabel: `Rojo`,
+        title: `Desempeño y calidad en producción en entorno operativo`,
+        shortSummary: `Sin homologación automotriz final ni operación en vehículos de producción seriada tras cierre de AGP Inglas.`,
+        kthDesc: `Despliegue del producto final certificado por terceros en entorno operativo comercial real, demostrando desempeño estable, calidad consistente y compatibilidad plena en condiciones de uso masivo.`,
+        caseEvidence: `<p>Según Sarmiento (2024), Fractal 2 nunca alcanzó la fase de operación comercial seriada en vehículos de calle. La descalificación en tolerancias finas de color y luminancia frente a Saint-Gobain en Mercedes-Benz, sumada a la reestructuración y cierre operativo de <strong>AGP Inglas</strong>, detuvo la tecnología al cierre de la Etapa 3.</p><p>En consecuencia, no existen certificaciones finales de homologación automotriz ni registros de desempeño en campo con usuarios finales.</p>`,
+        industryExample: `<strong>Homologación Regulatoria ECE R43 / FMVSS 205 y Certificación IATF 16949 (PPAP Nivel 3):</strong> Aprobación obligatoria de vidrios de seguridad automotriz ante organismos acreditados (fragmentación, impacto de esfera, distorsión óptica) y liberación de Proceso de Aprobación de Partes de Producción.`,
+        semaphoreReason: `<strong>Rojo (Faltante / Detenido):</strong> La tecnología no llegó a entorno operativo comercial ni obtuvo certificaciones finales de calidad en producción seriada.`
+      },
+
+      // ROW 2: IPRL (A, V, V, V)
+      {
+        id: `IPRL-1`,
+        dim: `IPRL`,
+        dimName: `IPRL · Propiedad Intelectual`,
+        stage: 1,
+        stageName: `Etapa 1 · Exploración`,
+        status: `yellow`,
+        statusLabel: `Amarillo`,
+        title: `Vigilancia tecnológica y análisis de titularidad (White Space)`,
+        shortSummary: `Mapeo de patentes de Saint-Gobain y AGC en borde que motivó design around; falta el informe bibliométrico original.`,
+        kthDesc: `Búsqueda sistemática en bases de datos de patentes y literatura científica para identificar competidores activos, titularidad preliminar de la invención y espacios en blanco (white space) libres de bloqueo previo.`,
+        caseEvidence: `<p>Sarmiento (2024) señala que la vigilancia tecnológica inicial detectó una alta concentración de patentes de inyección por el borde radicadas por <strong>Saint-Gobain</strong> y <strong>AGC (Asahi Glass Company)</strong> en Europa, Japón y Estados Unidos, motivando la decisión estratégica de ejecutar un <em>design around</em> hacia la superficie 4.</p><p>Asimismo, la patente US 2025/0180794 A1 cita explícitamente el antecedente alemán <strong>DE102020109338</strong> (acoplamiento trapezoidal), evidenciando sus fallas térmicas y de acople. No obstante, el expediente disponible no adjunta el mapa de calor bibliométrico ni el formulario de divulgación interno original.</p>`,
+        industryExample: `<strong>Mapa de Calor de Vigilancia Tecnológica (Patent Landscape Report) y Formulario IDF (OTRI):</strong> Matriz bidimensional que cruza segmentos técnicos (guías de onda, polímeros ópticos, tintas) frente a aplicaciones (techos panorámicos, parabrisas) para cuantificar densidad de patentes y documentar la titularidad inicial mediante un <em>Invention Disclosure Form</em>.`,
+        semaphoreReason: `<strong>Amarillo (Evidencia parcial):</strong> La vigilancia existió y determinó el giro de diseño (corroborado por las citas de arte previo en la patente), pero no reposan los informes bibliométricos ni formularios IDF internos originales en el expediente.`
+      },
+      {
+        id: `IPRL-2`,
+        dim: `IPRL`,
+        dimName: `IPRL · Propiedad Intelectual`,
+        stage: 2,
+        stageName: `Etapa 2 · Estructuración`,
+        status: `green`,
+        statusLabel: `Verde`,
+        title: `Patentabilidad, borrador de patente y ruta internacional PCT`,
+        shortSummary: `Radicación provisional US 63/310,642 (feb. 2022) y solicitud internacional PCT/IB2023/051425 (feb. 2023).`,
+        kthDesc: `Evaluación formal de requisitos de patentabilidad (novedad, nivel inventivo y aplicación industrial), redacción de memoria descriptiva y reivindicaciones, y radicación de prioridad y solicitud internacional PCT.`,
+        caseEvidence: `<p>La documentación oficial de la patente <strong>US 2025/0180794 A1</strong> (AGP, 2025) y las entrevistas (Sarmiento, 2024) confirman la radicación de la solicitud provisional estadounidense <strong>US 63/310,642</strong> en febrero de 2022 y la posterior presentación de la solicitud internacional <strong>PCT/IB2023/051425</strong> en febrero de 2023.</p><p>Las reivindicaciones definen con precisión la categoría de producto (<em>vehicle glazing</em>), la frase de transición (<em>comprising</em>) y los elementos protegibles: cavidades refractivas cónicas/cilíndricas con polímero óptico y revestimiento <em>cladding</em> acoplados en la superficie 4.</p>`,
+        industryExample: `<strong>Dictamen Legal de Patentabilidad (Novelty &amp; Inventive Step Opinion) y Arquitectura de Reivindicaciones:</strong> Análisis jurídico ante oficinas USPTO/EPO estructurando reivindicaciones independientes y dependientes (Preámbulo + <em>comprising</em> + Cuerpo) para maximizar el alcance de exclusión sin vulnerar la claridad técnica.`,
+        semaphoreReason: `<strong>Verde (Evidencia completa):</strong> Hito respaldado por números de expediente oficiales verificables (US 63/310,642 y PCT/IB2023/051425), fechas exactas y texto íntegro de reivindicaciones.`
+      },
+      {
+        id: `IPRL-3`,
+        dim: `IPRL`,
+        dimName: `IPRL · Propiedad Intelectual`,
+        stage: 3,
+        stageName: `Etapa 3 · Validación`,
+        status: `green`,
+        statusLabel: `Verde`,
+        title: `Libertad de operación (FTO) y fases nacionales (Solución 9)`,
+        shortSummary: `Evaluación FTO elemento por elemento aprobando la Solución 9 sin infracción y entrada a fase nacional en EE. UU.`,
+        kthDesc: `Verificación legal de Libertad de Operación (Freedom to Operate) frente a patentes vigentes de competidores en los mercados objetivo, junto con el ingreso a fases nacionales o regionales de la solicitud PCT.`,
+        caseEvidence: `<p>Según Sarmiento (2024), el equipo técnico-legal ejecutó un análisis comparativo de reivindicaciones (<em>Claim Chart</em>) frente al portafolio de terceros (Saint-Gobain / DE102020109338). Al reemplazar el acople trapezoidal en borde por inyección angular en superficie 4 mediante cavidades cónicas (<strong>Solución 9</strong>), se determinó ausencia de infracción y se habilitó la fase nacional en EE. UU. (publicada como US 2025/0180794 A1).</p>
+        <div class="table-wrap" style="margin-top:0.75rem;">
+          <table class="data-table">
+            <thead><tr><th>Reivindicación Tercero (Saint-Gobain)</th><th>Elemento Producto AGP</th><th>¿Infringe?</th><th>Dictamen</th></tr></thead>
+            <tbody>
+              <tr><td>1. Vidrio laminado (2 láminas)</td><td>Vidrio soda-lime 2.3 + 3.0 mm</td><td>Sí</td><td>Elemento genérico</td></tr>
+              <tr><td>2. Intercapa polimérica PVB</td><td>PVB 0.76 mm estándar</td><td>Sí</td><td>Elemento genérico</td></tr>
+              <tr><td>3. Inyección por acople trapezoidal</td><td>Inyección Superficie 4 (TIR Cónica)</td><td><strong>NO</strong></td><td><strong>Liberado (FTO)</strong></td></tr>
+              <tr class="is-focal"><td colspan="2"><strong>RESULTADO: SOLUCIÓN 9 APROBADA (Módulo LED con Cónica)</strong></td><td><strong>SIN INFRAC.</strong></td><td><strong>FTO POSITIVO</strong></td></tr>
+            </tbody>
+          </table>
+        </div>`,
+        industryExample: `<strong>Matriz Claim Chart de Libertad de Operación (FTO Opinion) bajo la Regla de Todos los Elementos:</strong> Dictamen jurídico de firma especializada en PI que contrasta cláusula por cláusula las reivindicaciones activas de competidores; basta que un elemento esencial falte (<em>All-Elements Rule</em>) para descartar infracción literal.`,
+        semaphoreReason: `<strong>Verde (Evidencia completa):</strong> Existe trazabilidad plena del ejercicio FTO, aprobación documentada de la Solución 9 libre de infracción y publicación efectiva de la fase nacional estadounidense.`
+      },
+      {
+        id: `IPRL-4`,
+        dim: `IPRL`,
+        dimName: `IPRL · Propiedad Intelectual`,
+        stage: 4,
+        stageName: `Etapa 4 · Implementación`,
+        status: `green`,
+        statusLabel: `Verde`,
+        title: `Estrategia y gestión dual de PI implementadas`,
+        shortSummary: `Bifurcación estratégica: Patente de producto para el ensamble visible vs. Secreto Industrial para la tinta y el horno.`,
+        kthDesc: `Implementación integral de la gestión de propiedad intelectual al servicio del modelo de negocio, articulando patentes defensivas/ofensivas, licenciamiento o secretos industriales según la detectabilidad comercial.`,
+        caseEvidence: `<p>La evidencia del caso (Sarmiento, 2024; AGP, 2025) demuestra una estrategia dual ejecutada con rigor empresarial para proteger los activos de Fractal 2:</p>
+        <div class="table-wrap" style="margin-top:0.75rem;">
+          <table class="data-table">
+            <thead><tr><th>Activo Intangible</th><th>Mecanismo de Protección</th><th>Justificación de Negocio</th></tr></thead>
+            <tbody>
+              <tr><td>Ensamble de Inyección (Geometría / Cónica en Sup. 4)</td><td><strong>Patente de Producto</strong> (US 2025/0180794 A1)</td><td>Auditable fácilmente por ingeniería inversa en vehículos de competidores (detección de infracción).</td></tr>
+              <tr><td>Formulación Química de Tinta Inorgánica y Curva de Horno</td><td><strong>Secreto Industrial + NDAs</strong></td><td>Evita revelar la «receta» química crítica y parámetros térmicos en la memoria pública de la patente.</td></tr>
+            </tbody>
+          </table>
+        </div>`,
+        industryExample: `<strong>Sistema de Gestión de PI ISO 56005 y Política Corporativa de Secretos Comerciales (DTSA / ADPIC):</strong> Gobernanza que segmenta tecnologías por facilidad de ingeniería inversa, aplicando compartimentación de acceso, contratos de confidencialidad (NDAs) con empleados/proveedores y registro de publicaciones defensivas.`,
+        semaphoreReason: `<strong>Verde (Evidencia completa):</strong> La estrategia dual patente/secreto industrial fue formulada, justificada jurídicamente y materializada en la publicación de la patente estadounidense (2025).`
+      },
+
+      // ROW 3: MRL (V, A, A, R)
+      {
+        id: `MRL-1`,
+        dim: `MRL`,
+        dimName: `MRL · Manufactura`,
+        stage: 1,
+        stageName: `Etapa 1 · Exploración`,
+        status: `green`,
+        statusLabel: `Verde`,
+        title: `Conceptos de manufactura (Vidrio simétrico sin muescas)`,
+        shortSummary: `Eliminación del corte escalonado (step-cut) de Fractal 1 para habilitar líneas estándar de vidrio automotriz.`,
+        kthDesc: `Identificación inicial de conceptos de fabricación, evaluación preliminar de compatibilidad con procesos existentes y estimación de ventajas de costo y reducibilidad de defectos frente a diseños previos.`,
+        caseEvidence: `<p>Según las entrevistas (Sarmiento, 2024), el origen mismo de Fractal 2 respondió a un hallazgo manufacturero crítico: los bordes asimétricos y muescas profundas de Fractal 1 concentraban esfuerzos mecánicos, generaban altos rechazos por fractura y exigían tolerancias extremas.</p><p>Al migrar a un vidrio laminado plano simétrico estándar (2.3 mm + PVB 0.76 mm + 3.0 mm) con inyección por superficie 4, se eliminaron los cortes en voladizo y se habilitó el uso de procesos convencionales de corte, curvado, serigrafía de tinta y laminado en autoclave.</p>`,
+        industryExample: `<strong>Evaluación Preliminar DFMA (Design for Manufacturing and Assembly) y PFMEA Conceptual:</strong> Metodología de Boothroyd &amp; Dewhurst que cuantifica reducción de operaciones de mecanizado especial en vidrio (CNC de muescas) y anticipa modos de falla por astillamiento de bordes.`,
+        semaphoreReason: `<strong>Verde (Evidencia completa):</strong> La racionalidad manufacturera, las ventajas de eliminar el step-cut y la compatibilidad con procesos estándar de laminado están claramente documentadas.`
+      },
+      {
+        id: `MRL-2`,
+        dim: `MRL`,
+        dimName: `MRL · Manufactura`,
+        stage: 2,
+        stageName: `Etapa 2 · Estructuración`,
+        status: `yellow`,
+        statusLabel: `Amarillo`,
+        title: `Definición de competencias, capacidad y costeo ABC`,
+        shortSummary: `Decisión de subcontratar inyección plástica de carcasas (housing); faltan hojas detalladas del modelo de costeo ABC.`,
+        kthDesc: `Definición de competencias productivas requeridas, análisis de capacidad interna frente a subcontratación (make-or-buy) y estructuración de costo objetivo mediante modelos de costeo por actividades.`,
+        caseEvidence: `<p>De acuerdo con Sarmiento (2024), AGP estructuró la división de competencias productivas: mantener internamente los procesos críticos de vidrio (corte simétrico, deposición de tinta inorgánica secreta y laminado) y subcontratar con terceros especializados la inyección plástica de alta precisión para las carcasas periféricas (<em>housing 50</em>) que alojan los módulos LED y las cavidades ópticas.</p><p>Se asigna Amarillo porque, aunque se conoce la estrategia de subcontratación y el reto de integrar la guía óptica (Solución 9), el expediente del caso no incluye las hojas de cálculo completas del modelo de costeo ABC ni cotizaciones firmadas de moldes.</p>`,
+        industryExample: `<strong>Modelo de Costeo Basado en Actividades (ABC) y Matriz Make-or-Buy Tier 2:</strong> Desglose unitario de inductores de costo (amortización de herramentales de inyección plástica, ciclo de autoclave, mano de obra de ensamble óptico y merma esperada) para fijar el <em>target cost</em> por techo panorámico.`,
+        semaphoreReason: `<strong>Amarillo (Evidencia parcial):</strong> La arquitectura de competencias y la decisión de subcontratación de carcasas están identificadas, pero faltan los registros cuantitativos completos del costeo ABC.`
+      },
+      {
+        id: `MRL-3`,
+        dim: `MRL`,
+        dimName: `MRL · Manufactura`,
+        stage: 3,
+        stageName: `Etapa 3 · Validación`,
+        status: `yellow`,
+        statusLabel: `Amarillo`,
+        title: `Producción en entorno relevante (Modularidad y Yield piloto)`,
+        shortSummary: `Módulo LED desmontable evitó descartar vidrios de $4,000–$5,000 USD aumentando el yield; faltan reportes FAI formales.`,
+        kthDesc: `Fabricación de primeras piezas o lotes piloto en entorno productivo representativo, aplicando inspecciones iniciales de calidad, control dimensional y medición de tasa de rendimiento (yield).`,
+        caseEvidence: `<p>Las notas de campo (Sarmiento, 2024) destacan que la modularidad del bloque LED de 12V CC en superficie 4 transformó el <em>yield</em> en corridas piloto: en Fractal 1 una falla electrónica obligaba a desechar la pieza completa de vidrio laminado valuada entre <strong>$4,000 y $5,000 USD</strong>, mientras que en Fractal 2 bastaba desmontar y sustituir el módulo defectuoso.</p><p>Sin embargo, persistió complejidad técnica en el ensamble preciso de la guía óptica en superficie 4, y no constan en el archivo reportes formales de inspección de primer artículo ni series estadísticas de <em>yield</em> pre-industrial.</p>`,
+        industryExample: `<strong>Informe de Inspección de Primer Artículo (FAI - AS9102 / IATF):</strong> Paquete normalizado compuesto por Formato 1 (Responsabilidad de Número de Parte), Formato 2 (Certificación de Materiales y Procesos Especiales como PVB/tinta) y Formato 3 (Medición de Tolerancias Dimensionales de cavidades ópticas).`,
+        semaphoreReason: `<strong>Amarillo (Evidencia parcial):</strong> Se comprobó cualitativamente el impacto positivo de la mantenibilidad modular sobre el rendimiento piloto, pero carece de documentación formal FAI y transferencia a línea pre-seriada.`
+      },
+      {
+        id: `MRL-4`,
+        dim: `MRL`,
+        dimName: `MRL · Manufactura`,
+        stage: 4,
+        stageName: `Etapa 4 · Implementación`,
+        status: `red`,
+        statusLabel: `Rojo`,
+        title: `Capacidad y rendimiento comercial (OEE en planta masiva)`,
+        shortSummary: `Proyecto detenido en PMV sin transferencia a línea industrial continua ni medición de OEE en planta comercial.`,
+        kthDesc: `Operación de manufactura industrial continua a escala comercial alcanzando el volumen anual pactado, la Eficiencia General de los Equipos (OEE) y el rendimiento al primer paso requeridos por el cliente.`,
+        caseEvidence: `<p>Según Sarmiento (2024), dado que Fractal 2 quedó congelado en la frontera entre Etapa 3 y Etapa 4 y posteriormente se produjo la reestructuración y cierre operativo de <strong>AGP Inglas</strong>, nunca se ejecutó la transferencia tecnológica hacia una planta de manufactura masiva ni se calcularon indicadores OEE de operación continua.</p>`,
+        industryExample: `<strong>Tablero de Control OEE (Overall Equipment Effectiveness) bajo TPM (Nakajima, 1988):</strong> Indicador compuesto (<var>Disponibilidad × Rendimiento × Calidad</var>, estándar automotriz ≥ 85%) acompañado de gráficos de control estadístico de proceso (SPC, <var>Cpk ≥ 1.33</var>) en líneas de ensamblaje de techos OEM.`,
+        semaphoreReason: `<strong>Rojo (Faltante / Detenido):</strong> Ausencia total de producción comercial en serie, capacidad industrial validada o registros OEE en planta.`
+      },
+
+      // ROW 4: BRL (A, A, V, R)
+      {
+        id: `BRL-1`,
+        dim: `BRL`,
+        dimName: `BRL · Competencia (Negocio y Mercado)`,
+        stage: 1,
+        stageName: `Etapa 1 · Exploración`,
+        status: `yellow`,
+        statusLabel: `Amarillo`,
+        title: `Vigilancia competitiva y marco NABC`,
+        shortSummary: `Identificación de necesidad OEM (transparencia apagado, sin alterar headliner) frente a micro-LEDs y fibras ópticas.`,
+        kthDesc: `Enunciado temprano de la oportunidad competitiva (Necesidad, Enfoque de solución, Beneficios y Competencia) y mapeo de alternativas comerciales dentro de la cadena de valor del sector.`,
+        caseEvidence: `<p>De acuerdo con Sarmiento (2024), AGP identificó la necesidad de los fabricantes automotrices de integrar iluminación ambiental en techos panorámicos con transparencia total en estado apagado y sin invadir el revestimiento interior (<em>headliner</em>), superando limitaciones estéticas de fibras ópticas expuestas y micro-LEDs visibles de la competencia.</p><p>Se asigna Amarillo debido a que el expediente del caso no conserva el formato impreso de la matriz NABC ni un informe comparativo formal de costos de las alternativas en esta etapa temprana.</p>`,
+        industryExample: `<strong>Formato NABC de SRI International + Customer Journey Map Tier 1/Tier 2:</strong> Plantilla estratégica de cuatro cuadrantes complementada con mapa de roles de compra OEM: Comprador (Compras Tier 1), Decisor Técnico (Ingeniería de Carrocería) y Usuario Final (Conductor/Pasajero).`,
+        semaphoreReason: `<strong>Amarillo (Evidencia parcial):</strong> La lógica NABC y la vigilancia sobre micro-LEDs/fibras ópticas surgen claramente de la entrevista, pero falta el formato NABC estructurado en archivo.`
+      },
+      {
+        id: `BRL-2`,
+        dim: `BRL`,
+        dimName: `BRL · Competencia (Negocio y Mercado)`,
+        stage: 2,
+        stageName: `Etapa 2 · Estructuración`,
+        status: `yellow`,
+        statusLabel: `Amarillo`,
+        title: `Matriz de competidores e hipótesis de USP`,
+        shortSummary: `Hipótesis USP en 4 atributos (transparencia, pegado poliuretano, modularidad LED, sup. 4); sin órdenes ni precios firmes.`,
+        kthDesc: `Construcción de matriz cuantitativa comparando la oferta propia frente a competidores directos en 4 a 5 atributos clave de decisión más el precio, deduciendo la Propuesta Única de Venta (USP).`,
+        caseEvidence: `<p>Según la entrevista (Sarmiento, 2024), la hipótesis de USP de Fractal 2 frente a soluciones de competidores como Saint-Gobain se sustentó en cuatro pilares: 1) transparencia total en apagado, 2) compatibilidad con pegado directo de poliuretano a la carrocería, 3) mantenibilidad modular del bloque LED 12V CC y 4) inyección óptica por superficie 4.</p><p>Se califica en Amarillo por no disponerse en esta etapa de una matriz ponderada de precios frente a competidores ni de cartas de intención u órdenes de compra preliminares.</p>`,
+        industryExample: `<strong>Matriz de Competidores y USP según Rosser Reeves (1961) + Mapa de Posicionamiento:</strong> Tabla de puntuación (1–5) en atributos críticos de compra B2B más precio por metro cuadrado, acompañada de gráfico bidimensional (Facilidad de Ensamble OEM vs. Costo Total de Propiedad).`,
+        semaphoreReason: `<strong>Amarillo (Evidencia parcial):</strong> Los pilares técnicos de la USP están claramente formulados, pero faltan datos comparativos cuantitativos de precio de mercado y validación contractual temprana.`
+      },
+      {
+        id: `BRL-3`,
+        dim: `BRL`,
+        dimName: `BRL · Competencia (Negocio y Mercado)`,
+        stage: 3,
+        stageName: `Etapa 3 · Validación`,
+        status: `green`,
+        statusLabel: `Verde`,
+        title: `Matriz validada y Pitch con Early Adopters (Mercedes y GM)`,
+        shortSummary: `Presentación de PMV a Mercedes-Benz (adjudicada a Saint-Gobain por tolerancias) y co-especificación con General Motors.`,
+        kthDesc: `Presentación directa del PMV ante adoptadores tempranos reales, validación en campo de la Propuesta Única de Venta y registro formal de decisiones técnicas o de adjudicación comercial.`,
+        caseEvidence: `<p>La evidencia de campo (Sarmiento, 2024) confirma la validación comercial real del PMV ante dos fabricantes globales de primer nivel: <strong>General Motors</strong> (co-especificación técnica e integración dentro del techo panorámico del vehículo de muy bajo volumen del Producto GM junto a Vario Plus) y <strong>Mercedes-Benz</strong> (proceso competitivo directo).</p><p>Aunque en Mercedes-Benz la adjudicación comercial fue obtenida por <strong>Saint-Gobain</strong> debido a un cumplimiento más estricto en tolerancias cromáticas y de luminancia, ambos procesos validaron frente a clientes reales el valor y las brechas competitivas de la solución.</p>`,
+        industryExample: `<strong>Deck de Pitch B2B para OEMs Automotrices y Minutas de Co-especificación RFQ:</strong> Paquete comercial de proveedor Tier 1 con tabla validada de especificaciones ópticas, costo objetivo por volumen y actas formales de evaluación de ingeniería de compras.`,
+        semaphoreReason: `<strong>Verde (Evidencia completa):</strong> Se ejecutó validación real de mercado con el PMV ante dos Early Adopters globales (GM y Mercedes-Benz), dejando registro claro de la co-especificación y del desenlace competitivo.`
+      },
+      {
+        id: `BRL-4`,
+        dim: `BRL`,
+        dimName: `BRL · Competencia (Negocio y Mercado)`,
+        stage: 4,
+        stageName: `Etapa 4 · Implementación`,
+        status: `red`,
+        statusLabel: `Rojo`,
+        title: `Defensa de posición comercial y captación del SOM`,
+        shortSummary: `Sin ventas comerciales ni captación del mercado obtenible tras pérdida con Mercedes-Benz y cierre de AGP Inglas ($0 retorno).`,
+        kthDesc: `Captura sostenida de clientes dentro del Mercado Obtenible (SOM), ejecución de contratos comerciales repetibles y activación de barreras defensivas frente a entrantes e imitadores.`,
+        caseEvidence: `<p>Según Sarmiento (2024), tras perder la adjudicación en Mercedes-Benz frente a Saint-Gobain y enfrentarse a la reestructuración y cierre operativo de <strong>AGP Inglas</strong>, Fractal 2 no logró firmar contratos de suministro en serie ni generar ingresos comerciales recurrentes, registrando un retorno financiero directo de <strong>$0 USD</strong>.</p>`,
+        industryExample: `<strong>Embudo AARRR B2B (McClure, 2007), Segmentación TAM/SAM/SOM/BHM (Aulet, 2013) y Declaración de Posicionamiento Defensivo:</strong> Tablero de conversión desde contacto OEM hasta contratos recurrentes, protegido por barreras combinadas de PI, contratos de servicio y exclusividad de canal.`,
+        semaphoreReason: `<strong>Rojo (Faltante / Detenido):</strong> No se concretaron ventas comerciales ni captación del SOM; la operación se detuvo antes de generar flujo comercial.`
+      }
+    ];
+
+    // =========================================================================
+    // DATA MODEL: 16 INTERVIEW QUESTIONS (TRIPARTITE FORMULA)
+    // =========================================================================
+    const INTERVIEW_QUESTIONS = [
+      // Etapa 1
+      {
+        code: `TRL 1`, stage: 1, dim: `TRL`, stageLabel: `Etapa 1 · Exploración`,
+        q1: `Andrés, al iniciar Fractal 2 en 2020 para resolver las deficiencias mecánicas de Fractal 1, ¿cuál fue el principio óptico y físico definido para la inyección por la superficie 4 del vidrio laminado y qué área de I+D validó la especificación teórica inicial?`,
+        q2: `¿En qué cuaderno de laboratorio o nota técnica optoelectrónica quedó registrada la física de la Reflexión Total Interna (n₁ < n₂ ≥ n₃) mediante acoplamiento angular?`,
+        q3: `¿Qué umbral teórico de eficiencia óptica y transparencia en apagado fijó el Comité de I+D para aprobar el paso del concepto a prototipado de laboratorio?`
+      },
+      {
+        code: `IPRL 1`, stage: 1, dim: `IPRL`, stageLabel: `Etapa 1 · Exploración`,
+        q1: `Durante la vigilancia inicial de patentes de competidores como Saint-Gobain y AGC en inyección por el borde, ¿qué espacio libre (white space) se identificó que justificara desarrollar un design around para Fractal 2?`,
+        q2: `¿Qué informe de búsqueda tecnológica, mapa de calor o formulario de divulgación de invención interno formalizó la titularidad inicial a favor de AGP?`,
+        q3: `¿Con qué criterio de riesgo de infracción decidió la dirección de PI abandonar el acople trapezoidal por borde y financiar la ruta de superficie 4?`
+      },
+      {
+        code: `MRL 1`, stage: 1, dim: `MRL`, stageLabel: `Etapa 1 · Exploración`,
+        q1: `En los primeros estudios de factibilidad de fabricación, ¿qué ventajas de manufactura ofreció eliminar las muescas profundas (step-cut) de Fractal 1 y qué orden de costo preliminar se estimó?`,
+        q2: `¿Existe un informe de viabilidad de procesos o estudio DFMA donde se comparara el ensamble de vidrio simétrico con carcasas periféricas frente al presupuesto inicial?`,
+        q3: `¿Qué reducción mínima de merma por rotura en borde exigió manufactura para validar la arquitectura de vidrio plano simétrico?`
+      },
+      {
+        code: `BRL 1`, stage: 1, dim: `BRL`, stageLabel: `Etapa 1 · Exploración`,
+        q1: `Al mapear las alternativas de iluminación ambiental en techos panorámicos (fibras ópticas, micro-LEDs), ¿cuáles fueron los parámetros mínimos de desempeño técnico e integración estética definidos en la matriz NABC?`,
+        q2: `¿En qué informe de vigilancia competitiva o formato NABC se sustentó que la transparencia total del vidrio apagado superaba a los productos comerciales rivales?`,
+        q3: `¿Cómo priorizó el equipo comercial los requerimientos del decisor de diseño frente al área de compras OEM para autorizar la estructuración del negocio?`
+      },
+      // Etapa 2
+      {
+        code: `TRL 2`, stage: 2, dim: `TRL`, stageLabel: `Etapa 2 · Estructuración`,
+        q1: `Tras construir el prototipo de laboratorio (light bar) con módulos LED 12V CC en superficie 4, ¿cuál fue la luminosidad medida en nits/candelas y qué eficiencia de transmisión óptica se registró?`,
+        q2: `¿Qué reporte de laboratorio de diseño de experimentos (DoE) certifica que la inyección por superficie no alteró la transparencia base del vidrio ni sus propiedades térmicas?`,
+        q3: `¿Qué criterios cuantitativos de uniformidad lumínica sobre la tinta inorgánica determinaron que el banco de pruebas estaba listo para escalar a techo completo?`
+      },
+      {
+        code: `IPRL 2`, stage: 2, dim: `IPRL`, stageLabel: `Etapa 2 · Estructuración`,
+        q1: `Con la prioridad provisional radicada en EE. UU. en febrero de 2022 (US 63/310,642), ¿qué elementos del ensamble se determinaron protegibles y por qué se decidió radicar la solicitud internacional PCT (PCT/IB2023/051425) en febrero de 2023?`,
+        q2: `¿Qué dictamen legal de patentabilidad respaldó la novedad y nivel inventivo de las cavidades cónicas con revestimiento cladding frente al arte previo DE102020109338?`,
+        q3: `¿En qué jurisdicciones clave del mercado automotriz decidió invertir AGP al estructurar la cobertura internacional de la PCT?`
+      },
+      {
+        code: `MRL 2`, stage: 2, dim: `MRL`, stageLabel: `Etapa 2 · Estructuración`,
+        q1: `Al evaluar la industrialización del prototipo, ¿qué complejidad presentó la integración de la guía de luz (Solución 9) en superficie 4 y qué costo objetivo (target cost) se estableció mediante el modelo ABC?`,
+        q2: `¿En qué matriz de capacidad de producción o análisis make-or-buy se documentó la subcontratación de la inyección plástica para las carcasas de alojamiento de los LEDs?`,
+        q3: `¿Qué techo de inversión en moldes de inyección y costo unitario aceptó el Comité para aprobar el paso hacia lotes piloto?`
+      },
+      {
+        code: `BRL 2`, stage: 2, dim: `BRL`, stageLabel: `Etapa 2 · Estructuración`,
+        q1: `En la estructuración del modelo de negocio, ¿cuáles fueron los 4 a 5 atributos técnicos y de precio que conformaron la hipótesis de Propuesta Única de Venta (USP) de Fractal 2 frente a Saint-Gobain?`,
+        q2: `¿En qué matriz comparativa de competidores o lienzo BMC se registró el diferencial de valor por pegado directo con poliuretano en la carrocería?`,
+        q3: `¿Qué umbral de precio objetivo frente a soluciones europeas justificó proseguir hacia la fabricación de PMVs para clientes OEM?`
+      },
+      // Etapa 3
+      {
+        code: `TRL 3`, stage: 3, dim: `TRL`, stageLabel: `Etapa 3 · Validación`,
+        q1: `En las pruebas del PMV a escala real (techos panorámicos), ¿cómo respondió el ensamble óptico de superficie 4 ante ensayos ambientales automotrices de temperatura, vibración y radiación UV?`,
+        q2: `¿Qué actas de laboratorio o informes de validación en entorno relevante documentaron el cumplimiento de requisitos de seguridad e integración vehicular?`,
+        q3: `¿Qué desviaciones técnicas detectadas en el PMV obligaron a ajustar la geometría de cavidades antes de presentar el producto a los OEMs?`
+      },
+      {
+        code: `IPRL 3`, stage: 3, dim: `IPRL`, stageLabel: `Etapa 3 · Validación`,
+        q1: `Al construir el Claim Chart de Libertad de Operación (FTO) frente a las patentes de Saint-Gobain, ¿cómo demostró la Solución 9 que el acoplamiento por superficie 4 evitaba la infracción del acople trapezoidal?`,
+        q2: `¿Qué opinión legal de FTO y comprobantes de ingreso a fase nacional estadounidense (luego US 2025/0180794 A1) respaldaron la operación comercial segura?`,
+        q3: `¿Qué modificaciones de diseño fueron dictaminadas por el equipo legal durante la evaluación FTO para blindar el producto ante posibles demandas en Europa o EE. UU.?`
+      },
+      {
+        code: `MRL 3`, stage: 3, dim: `MRL`, stageLabel: `Etapa 3 · Validación`,
+        q1: `Durante la fabricación de las corridas piloto, ¿en cuánto aumentó el rendimiento (yield) al incorporar el módulo LED desmontable en comparación con el descarte completo ($4,000–$5,000 USD) de Fractal 1?`,
+        q2: `¿Se generaron informes de inspección de primer artículo (FAI) o registros de control dimensional de las cavidades cónicas en entorno relevante de manufactura?`,
+        q3: `¿Qué cuellos de botella en el ensamblaje de la guía óptica impidieron validar completamente la transferencia hacia una línea de alto volumen?`
+      },
+      {
+        code: `BRL 3`, stage: 3, dim: `BRL`, stageLabel: `Etapa 3 · Validación`,
+        q1: `Al presentar el PMV en el pitch comercial ante Mercedes-Benz y General Motors, ¿qué atributos de la USP fueron validados y por qué motivos técnicos ganó Saint-Gobain la adjudicación de Mercedes-Benz?`,
+        q2: `¿En qué minutas de co-especificación técnica (Producto GM) y retroalimentación de licitación quedaron consignados los criterios de luminosidad y tolerancia cromática?`,
+        q3: `¿Qué plan de ajuste técnico y comercial acordó la gerencia tras el feedback de Mercedes-Benz para capitalizar la relación con General Motors?`
+      },
+      // Etapa 4
+      {
+        code: `TRL 4`, stage: 4, dim: `TRL`, stageLabel: `Etapa 4 · Implementación`,
+        q1: `Al acercarse a la etapa de implementación comercial, ¿qué certificaciones finales de calidad automotriz o pruebas en entorno operativo real faltaron por completarse en Fractal 2?`,
+        q2: `¿Existió algún expediente parcial de homologación vehicular (ECE R43 / FMVSS 205) o cierre técnico documentado previo al congelamiento del proyecto?`,
+        q3: `¿Qué brecha de desempeño cromático impidió que el Comité autorizara la liberación final del producto hacia operación comercial?`
+      },
+      {
+        code: `IPRL 4`, stage: 4, dim: `IPRL`, stageLabel: `Etapa 4 · Implementación`,
+        q1: `¿Cómo se implementó la estrategia dual de propiedad intelectual separando la patente pública del ensamble mecánico-óptico frente al secreto industrial de la tinta inorgánica y temperatura del horno?`,
+        q2: `¿Qué contratos de confidencialidad (NDAs), protocolos internos de resguardo de fórmulas y registros de publicación de patente (US 2025/0180794 A1) formalizan esta gestión?`,
+        q3: `¿Qué valor estratégico conserva hoy el portafolio patentado de Fractal 2 para eventuales licenciamientos o transferencias tecnológicas tras el cierre operativo?`
+      },
+      {
+        code: `MRL 4`, stage: 4, dim: `MRL`, stageLabel: `Etapa 4 · Implementación`,
+        q1: `Antes de la reestructuración y cierre operativo de AGP Inglas, ¿se alcanzó a instalar capacidad de producción continua o a medir indicadores de Eficiencia General de Equipos (OEE)?`,
+        q2: `¿Existe algún plan de transferencia a planta masiva o cálculo proyectado de capacidad anual que quedara sin ejecutar?`,
+        q3: `¿En qué momento determinó la dirección suspender la inversión en herramentales seriados ante el desenlace comercial y corporativo?`
+      },
+      {
+        code: `BRL 4`, stage: 4, dim: `BRL`, stageLabel: `Etapa 4 · Implementación`,
+        q1: `Con la pérdida de la licitación de Mercedes-Benz y la detención en Etapa 3, ¿se concretó alguna venta comercial recurrente o captura parcial del mercado obtenible (SOM) para Fractal 2?`,
+        q2: `¿Existe algún registro de ingresos comerciales, contratos de suministro en serie o cierre financiero final distinto de un retorno de $0 USD?`,
+        q3: `¿Qué lección principal dejó el caso Variolux sobre el cruce del Valle de la Muerte en la cadena Tier 1 automotriz para futuros proyectos de vidrios inteligentes?`
+      }
+    ];
+
+    // =========================================================================
+    // DATA MODEL: TECHNOLOGIES CHAPTER
+    // =========================================================================
+    const TECH_DATA = {
+      vario: {
+        title: `Vario Plus — Vidrio Conmutable por Partículas Suspendidas (SPD)`,
+        badge: `TECNOLOGÍA MADURA · 2015–2020`,
+        desc: `Sistema electro-óptico maduro incorporado en el Producto GM a petición expresa del cliente. Utiliza una suspensión líquida orgánica (~90 µm) con partículas de herapatita (poliyoduro de sulfato de quinina) encapsulada entre películas conductoras transparentes de óxido de indio y estaño (ITO).`,
+        specs: [
+          [`Arquitectura laminar`, `Película fotopolimérica SPD (~90 µm) laminada con intercapas poliméricas entre láminas de vidrio y recubrimiento conductor ITO.`],
+          [`Mecanismo eléctrico`, `Voltaje alterno variable de 0 a 110V AC (operación típica 60–100V AC; consumo eléctrico de 0.6 a 1.2 W/m² para mantener estado claro).`],
+          [`Mecanismo físico-óptico`, `Sin voltaje (circuito abierto), las partículas se orientan aleatoriamente bloqueando la luz. Al aplicar campo AC, los dipolos se alinean paralelos al campo permitiendo la transmisión.`],
+          [`Desempeño óptico`, `Transmitancia de Luz Visible (VLT) regulable continuamente de 1% (azul-gris oscuro) a 65% (claro); modulación ~60% en espectro visible (380–780 nm) y absorción en NIR (1000–2100 nm).`],
+          [`Rol en Caso Variolux`, `Tecnología consolidada que el OEM solicita por nombre para control solar dinámico en el techo panorámico del Producto GM.`]
+        ]
+      },
+      fractal1: {
+        title: `Fractal 1 — Iluminación Integrada con Inyección por el Borde`,
+        badge: `PRIMERA GENERACIÓN · 2018–2023`,
+        desc: `Primera generación de iluminación ambiental en vidrio laminado desarrollada por AGP. Aunque validó el efecto estético de dispersión lumínica mediante tinta inorgánica, presentó severas restricciones estructurales, de tolerancias y de mantenibilidad en línea automotriz.`,
+        specs: [
+          [`Arquitectura laminar`, `Vidrio laminado asimétrico con corte escalonado en voladizo (step-cut) y muescas profundas en los bordes donde la lámina exterior sobresale de la interior.`],
+          [`Mecanismo eléctrico`, `Tiras de diodos LED SMD alojadas directamente en el canto expuesto del vidrio laminado.`],
+          [`Mecanismo físico-óptico`, `Acoplamiento lateral por el borde que introduce la luz directamente al plano del vidrio para propagarse por TIR hasta la tinta inorgánica dispersora.`],
+          [`Deficiencias mecánicas`, `Las muescas en los bordes debilitan la resistencia estructural del perímetro, demandan tolerancias dimensionales críticas y dificultan el pegado directo con poliuretano en la carrocería.`],
+          [`Impacto en Yield / Costo`, `Cualquier falla electrónica del LED encapsulado obligaba a desechar la pieza completa de vidrio laminado valuada entre $4,000 y $5,000 USD.`]
+        ]
+      },
+      fractal2: {
+        title: `Fractal 2 — Inyección Angular por Superficie 4 (Tecnología Asignada)`,
+        badge: `SEGUNDA GENERACIÓN · 2020–2024 · US 2025/0180794 A1`,
+        desc: `Rediseño optoelectrónico y mecánico integral orientado a resolver las fallas de Fractal 1 y evitar infracción de patentes rivales (design around). Permite usar un vidrio laminado plano simétrico estándar y un bloque LED desmontable de 12V CC sobre la superficie 4.`,
+        specs: [
+          [`Arquitectura laminar`, `Vidrio laminado plano simétrico estándar sin muescas ni step-cut: lámina exterior 2.3 mm + intercapa PVB 0.76 mm + lámina interior 3.0 mm (soda-lime, n₃ ≈ 1.52).`],
+          [`Mecanismo eléctrico`, `Módulo LED desmontable y reemplazable alimentado a 12V CC, fijado externamente sobre la superficie 4 (cara interna al habitáculo).`],
+          [`Mecanismo físico-óptico`, `Carcasa (housing 50) con cavidades cónicas/cilíndricas rellenas de polímero óptico (filler 28, n₂) y revestimiento (cladding 48, n₁) cumpliendo n₁ < n₂ ≥ n₃ para inyección diagonal TIR y dispersión en tinta inorgánica.`],
+          [`Ventaja en carrocería`, `Al eliminar el corte asimétrico de bordes, el techo funciona como un vidrio tradicional permitiendo pegado directo con poliuretano al marco del vehículo.`],
+          [`Mantenibilidad y Yield`, `Si falla la electrónica, el módulo LED de 12V CC se retira y reemplaza sin desechar el vidrio laminado, elevando drásticamente el yield de fabricación.`]
+        ]
+      }
+    };
+
+    // =========================================================================
+    // STATE MANAGEMENT (PERSISTENT VIA notebookAppApi)
+    // =========================================================================
+    const APP_STATE = {
+      activeTech: `fractal2`,
+      varioVoltage: 70,
+      fractal2LedOn: true,
+      chartMode: `bar`,
+      mStage: `all`,
+      mDim: `all`,
+      mStatus: `all`,
+      mSearch: ``,
+      qStage: `all`,
+      qDim: `all`,
+      auditedCells: {},
+      auditNotes: {},
+      activeModalIndex: -1
+    };
+
+    async function persistState() {
+      if (window.notebookAppApi && typeof window.notebookAppApi.setAppState === `function`) {
+        try {
+          await window.notebookAppApi.setAppState({
+            activeTech: APP_STATE.activeTech,
+            varioVoltage: APP_STATE.varioVoltage,
+            fractal2LedOn: APP_STATE.fractal2LedOn,
+            chartMode: APP_STATE.chartMode,
+            mStage: APP_STATE.mStage,
+            mDim: APP_STATE.mDim,
+            mStatus: APP_STATE.mStatus,
+            qStage: APP_STATE.qStage,
+            qDim: APP_STATE.qDim,
+            auditedCells: APP_STATE.auditedCells,
+            auditNotes: APP_STATE.auditNotes
+          });
+        } catch (err) {
+          // Graceful fallback in preview environments
+        }
+      }
+    }
+
+    function updateAuditBadge() {
+      const count = Object.keys(APP_STATE.auditedCells).filter((k) => APP_STATE.auditedCells[k]).length;
+      const badge = document.getElementById(`audit-progress-badge`);
+      if (badge) badge.textContent = `${count} / 16 REVISADAS`;
+    }
+
+    // =========================================================================
+    // CHART.JS: ASYNCHRONY PROFILE
+    // =========================================================================
+    let readinessChartInstance = null;
+
+    function getCssToken(name) {
+      return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    }
+
+    function scoreFromStatus(status) {
+      if (status === `green`) return 2;
+      if (status === `yellow`) return 1;
+      return 0;
+    }
+
+    function renderReadinessChart() {
+      const canvas = document.getElementById(`readinessChart`);
+      if (!canvas || typeof Chart === `undefined`) return;
+
+      if (readinessChartInstance) {
+        readinessChartInstance.destroy();
+      }
+
+      const c1 = getCssToken(`--data-1`) || `#1f4e5f`;
+      const c2 = getCssToken(`--data-2`) || `#d99000`;
+      const c3 = getCssToken(`--data-3`) || `#2b6e52`;
+      const c4 = getCssToken(`--data-4`) || `#b84a39`;
+      const ink = getCssToken(`--on-surface`) || `#17181a`;
+      const muted = getCssToken(`--on-surface-variant`) || `#56585c`;
+      const gridCol = getCssToken(`--outline-variant`) || `#dedad0`;
+      const fontLabel = getCssToken(`--font-label`) || `monospace`;
+
+      const dims = [`TRL`, `IPRL`, `MRL`, `BRL`];
+      const stageLabels = [`E1 · Exploración`, `E2 · Estructuración`, `E3 · Validación`, `E4 · Implementación`];
+
+      if (APP_STATE.chartMode === `bar`) {
+        const datasets = [
+          { label: `TRL · Funcionalidad`, data: [2, 2, 2, 0], backgroundColor: c1 },
+          { label: `IPRL · Prop. Intelectual`, data: [1, 2, 2, 2], backgroundColor: c2 },
+          { label: `MRL · Manufactura`, data: [2, 1, 1, 0], backgroundColor: c3 },
+          { label: `BRL · Competencia`, data: [1, 1, 2, 0], backgroundColor: c4 }
+        ];
+        readinessChartInstance = new Chart(canvas, {
+          type: `bar`,
+          data: { labels: stageLabels, datasets },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: `bottom`,
+                labels: { color: ink, font: { family: fontLabel, size: 11 }, boxWidth: 12 }
+              },
+              tooltip: {
+                callbacks: {
+                  label: (ctx) => {
+                    const mapTxt = { 2: `Verde (Completa)`, 1: `Amarillo (Parcial)`, 0: `Rojo (Detenido/Faltante)` };
+                    return `${ctx.dataset.label}: ${mapTxt[ctx.raw] || ctx.raw}`;
+                  }
+                }
+              }
+            },
+            scales: {
+              x: {
+                ticks: { color: muted, font: { family: fontLabel, size: 11 } },
+                grid: { display: false }
+              },
+              y: {
+                min: 0,
+                max: 2.2,
+                ticks: {
+                  stepSize: 1,
+                  color: muted,
+                  font: { family: fontLabel, size: 11 },
+                  callback: (v) => (v === 2 ? `Verde (2)` : v === 1 ? `Amarillo (1)` : v === 0 ? `Rojo (0)` : ``)
+                },
+                grid: { color: gridCol }
+              }
+            }
+          }
+        });
+      } else {
+        // Radar comparing cumulative score (max 8 per dimension) vs ideal balanced 8
+        const totals = dims.map((d) =>
+          MATRIX_CELLS.filter((c) => c.dim === d).reduce((acc, c) => acc + scoreFromStatus(c.status), 0)
+        );
+        readinessChartInstance = new Chart(canvas, {
+          type: `radar`,
+          data: {
+            labels: [`TRL · Funcionalidad (6/8)`, `IPRL · Prop. Intelectual (7/8)`, `MRL · Manufactura (4/8)`, `BRL · Competencia (4/8)`],
+            datasets: [
+              {
+                label: `Madurez Acumulada Fractal 2 (máx. 8 pts)`,
+                data: totals,
+                borderColor: c1,
+                backgroundColor: `rgba(31, 78, 95, 0.18)`,
+                pointBackgroundColor: c2,
+                borderWidth: 2.5
+              },
+              {
+                label: `Referencia Equilibrada (Etapa 4 completa)`,
+                data: [8, 8, 8, 8],
+                borderColor: gridCol,
+                borderDash: [5, 5],
+                backgroundColor: `transparent`,
+                borderWidth: 1.5
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: `bottom`,
+                labels: { color: ink, font: { family: fontLabel, size: 11 }, boxWidth: 12 }
+              }
+            },
+            scales: {
+              r: {
+                min: 0,
+                max: 8,
+                ticks: { stepSize: 2, color: muted, backdropColor: `transparent`, font: { family: fontLabel, size: 10 } },
+                pointLabels: { color: ink, font: { family: fontLabel, size: 11 } },
+                grid: { color: gridCol },
+                angleLines: { color: gridCol }
+              }
+            }
+          }
+        });
+      }
+    }
+
+    function switchChartMode(mode) {
+      APP_STATE.chartMode = mode;
+      const bBar = document.getElementById(`btn-chart-bar`);
+      const bRad = document.getElementById(`btn-chart-radar`);
+      if (bBar) bBar.classList.toggle(`is-active`, mode === `bar`);
+      if (bRad) bRad.classList.toggle(`is-active`, mode === `radar`);
+      renderReadinessChart();
+      persistState();
+    }
+
+    // =========================================================================
+    // SECTION 1: TECHNOLOGIES INTERACTIVE EXPLORER & SVG SIMULATOR
+    // =========================================================================
+    function selectTech(techKey) {
+      APP_STATE.activeTech = techKey;
+      [`vario`, `fractal1`, `fractal2`].forEach((k) => {
+        const btn = document.getElementById(`tab-${k}`);
+        if (btn) {
+          btn.classList.toggle(`is-active`, k === techKey);
+          btn.setAttribute(`aria-selected`, k === techKey ? `true` : `false`);
+        }
+      });
+      renderTechView();
+      persistState();
+    }
+
+    function updateVarioVoltage(val) {
+      APP_STATE.varioVoltage = Number(val);
+      renderTechDiagramOnly();
+      persistState();
+    }
+
+    function toggleFractal2Led() {
+      APP_STATE.fractal2LedOn = !APP_STATE.fractal2LedOn;
+      renderTechDiagramOnly();
+      persistState();
+    }
+
+    function renderTechView() {
+      const data = TECH_DATA[APP_STATE.activeTech];
+      const detailEl = document.getElementById(`tech-detail-panel`);
+      if (detailEl && data) {
+        const specsHtml = data.specs.map(([k, v]) => `
+          <div class="spec-row">
+            <span class="spec-key">${k}</span>
+            <span>${v}</span>
+          </div>
+        `).join(``);
+
+        detailEl.innerHTML = `
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--space-xs);margin-bottom:var(--space-sm);">
+            <span class="dossier-pill">${data.badge}</span>
+          </div>
+          <h3 style="font-family:var(--font-headline);font-size:1.35rem;margin:0 0 var(--space-xs);">${data.title}</h3>
+          <p style="color:var(--on-surface-variant);margin:0;">${data.desc}</p>
+          <div class="tech-specs-list">${specsHtml}</div>
+        `;
+      }
+      renderTechDiagramOnly();
+    }
+
+    function renderTechDiagramOnly() {
+      const svgBox = document.getElementById(`diagram-svg-container`);
+      const ctrlBox = document.getElementById(`diagram-controls`);
+      const kicker = document.getElementById(`diag-kicker`);
+      const readout = document.getElementById(`diag-readout`);
+      if (!svgBox || !ctrlBox) return;
+
+      const cGlass = getCssToken(`--glass-tint`) || `#dceef2`;
+      const cDark = getCssToken(`--glass-dark`) || `#192b36`;
+      const cPvb = getCssToken(`--pvb-tint`) || `#f5ebd1`;
+      const cLed = getCssToken(`--led-glow`) || `#f2b705`;
+      const cSlate = getCssToken(`--secondary`) || `#1f4e5f`;
+      const cInk = getCssToken(`--on-surface`) || `#17181a`;
+      const cErr = getCssToken(`--danger`) || `#b42318`;
+
+      if (APP_STATE.activeTech === `vario`) {
+        const v = APP_STATE.varioVoltage;
+        const vlt = Math.round(1 + (v / 110) * 64);
+        const angle = Math.round(78 * (1 - v / 110));
+        const opacityFilm = (0.88 - (v / 110) * 0.72).toFixed(2);
+        if (kicker) kicker.textContent = `SIMULADOR DIPOLAR SPD · PELÍCULA FOTOPOLIMÉRICA ~90 µm`;
+        if (readout) readout.textContent = `${v}V AC · VLT ${vlt}%`;
+
+        let dipoles = ``;
+        for (let i = 0; i < 8; i++) {
+          const cx = 115 + i * 48;
+          const rot = v > 100 ? 0 : (i % 2 === 0 ? angle : -angle);
+          dipoles += `<line x1="${cx - 10}" y1="115" x2="${cx + 10}" y2="115" stroke="${cInk}" stroke-width="2.5" stroke-linecap="round" transform="rotate(${rot} ${cx} 115)"/>`;
+        }
+
+        svgBox.innerHTML = `
+          <svg viewBox="0 0 560 220" width="100%" height="auto" role="img" aria-label="Esquema transversal de Vario Plus SPD">
+            <rect x="60" y="36" width="440" height="42" fill="${cGlass}" stroke="${cInk}" stroke-width="1.5"/>
+            <text x="72" y="61" font-family="Geist Mono, monospace" font-size="11" fill="${cInk}">VIDRIO EXTERIOR + RECUBRIMIENTO CONDUCTOR ITO</text>
+            <rect x="60" y="78" width="440" height="74" fill="${cDark}" fill-opacity="${opacityFilm}" stroke="${cSlate}" stroke-width="1.5"/>
+            ${dipoles}
+            <text x="72" y="142" font-family="Geist Mono, monospace" font-size="10" fill="${vlt > 35 ? cInk : `#ffffff`}">GEL ORGÁNICO (~90 µm) · HERAPATITA · VLT: ${vlt}%</text>
+            <rect x="60" y="152" width="440" height="42" fill="${cGlass}" stroke="${cInk}" stroke-width="1.5"/>
+            <text x="72" y="177" font-family="Geist Mono, monospace" font-size="11" fill="${cInk}">VIDRIO INTERIOR + RECUBRIMIENTO ITO (${v}V AC)</text>
+          </svg>
+        `;
+
+        ctrlBox.innerHTML = `
+          <div class="control-group">
+            <label class="control-label" for="vario-volt-slider">Control de Voltaje Aplicado (0 – 110V AC): <strong>${v}V AC</strong> → VLT <strong>${vlt}%</strong></label>
+            <input id="vario-volt-slider" type="range" class="range-input" min="0" max="110" step="5" value="${v}" oninput="updateVarioVoltage(this.value)">
+          </div>
+        `;
+      } else if (APP_STATE.activeTech === `fractal1`) {
+        if (kicker) kicker.textContent = `CORTE ASIMÉTRICO (STEP-CUT) · INYECCIÓN POR BORDE`;
+        if (readout) readout.textContent = `RIESGO MECÁNICO EN CANTO`;
+
+        svgBox.innerHTML = `
+          <svg viewBox="0 0 560 220" width="100%" height="auto" role="img" aria-label="Esquema transversal asimétrico de Fractal 1 con corte en voladizo">
+            <!-- Outer glass longer overhang -->
+            <rect x="40" y="42" width="480" height="44" fill="${cGlass}" stroke="${cInk}" stroke-width="1.5"/>
+            <text x="150" y="68" font-family="Geist Mono, monospace" font-size="11" fill="${cInk}">VIDRIO EXTERIOR (VOLADIZO ASIMÉTRICO / STEP-CUT)</text>
+            <!-- PVB + Inorganic ink -->
+            <rect x="110" y="86" width="380" height="22" fill="${cPvb}" stroke="${cInk}" stroke-width="1"/>
+            <line x1="150" y1="97" x2="460" y2="97" stroke="${cLed}" stroke-width="2" stroke-dasharray="6 4"/>
+            <!-- Inner glass recessed -->
+            <rect x="110" y="108" width="380" height="46" fill="${cGlass}" stroke="${cInk}" stroke-width="1.5"/>
+            <text x="150" y="135" font-family="Geist Mono, monospace" font-size="11" fill="${cInk}">VIDRIO INTERIOR RECORTADO (MUESCA PROFUNDA)</text>
+            <!-- SMD LED at edge -->
+            <rect x="76" y="106" width="30" height="42" fill="${cDark}" stroke="${cErr}" stroke-width="2"/>
+            <circle cx="96" cy="127" r="6" fill="${cLed}"/>
+            <!-- Rays into edge -->
+            <polyline points="106,127 210,108 320,152 430,108" fill="none" stroke="${cLed}" stroke-width="2"/>
+            <!-- Stress alert -->
+            <circle cx="110" cy="86" r="14" fill="none" stroke="${cErr}" stroke-width="2" stroke-dasharray="3 2"/>
+            <text x="40" y="185" font-family="Geist Mono, monospace" font-size="10.5" fill="${cErr}">⚠ CONCENTRACIÓN DE ESFUERZOS + FALLA LED = DESCARTE PIEZA ($4k–$5k USD)</text>
+          </svg>
+        `;
+
+        ctrlBox.innerHTML = `
+          <div style="font-size:0.86rem; color:var(--on-surface-variant);">
+            <strong>Diagnóstico Estructural:</strong> La muesca asimétrica en el borde impide el pegado estándar directo con poliuretano y vuelve irreparable el laminado si se daña la tira LED SMD perimetral.
+          </div>
+        `;
+      } else {
+        const on = APP_STATE.fractal2LedOn;
+        if (kicker) kicker.textContent = `VIDRIO SIMÉTRICO ESTÁNDAR · INYECCIÓN SUPERFICIE 4 (US 2025/0180794 A1)`;
+        if (readout) readout.textContent = on ? `12V CC ENCENDIDO · TIR ACTIVO` : `12V CC APAGADO · TRANSPARENCIA TOTAL`;
+
+        const rayMarkup = on ? `
+          <polyline points="118,145 152,110 218,52 292,108 368,52 444,108 495,62" fill="none" stroke="${cLed}" stroke-width="2.5"/>
+          <circle cx="292" cy="97" r="4" fill="${cLed}"/>
+          <circle cx="368" cy="97" r="4" fill="${cLed}"/>
+          <circle cx="444" cy="97" r="4" fill="${cLed}"/>
+          <text x="240" y="198" font-family="Geist Mono, monospace" font-size="10.5" fill="${cSlate}">DISPERSIÓN EN TINTA INORGÁNICA · n₁ (cladding) &lt; n₂ (filler) ≥ n₃ (vidrio 1.52)</text>
+        ` : `
+          <text x="230" y="198" font-family="Geist Mono, monospace" font-size="10.5" fill="${cSlate}">ESTADO APAGADO: TRANSPARENCIA BASE PRESERVADA SIN OBSTRUCCIÓN VISUAL</text>
+        `;
+
+        svgBox.innerHTML = `
+          <svg viewBox="0 0 560 220" width="100%" height="auto" role="img" aria-label="Esquema transversal simétrico de Fractal 2 con inyección angular por superficie 4">
+            <!-- Outer symmetric glass 2.3 mm -->
+            <rect x="55" y="42" width="450" height="36" fill="${cGlass}" stroke="${cInk}" stroke-width="1.5"/>
+            <text x="70" y="64" font-family="Geist Mono, monospace" font-size="10.5" fill="${cInk}">LÁMINA EXTERIOR SODA-LIME (2.3 mm) · SIN STEP-CUT</text>
+            <!-- PVB 0.76 mm + Ink -->
+            <rect x="55" y="78" width="450" height="22" fill="${cPvb}" stroke="${cInk}" stroke-width="1"/>
+            <text x="70" y="93" font-family="Geist Mono, monospace" font-size="10" fill="${cInk}">PVB 0.76 mm + TINTA INORGÁNICA (SECRETO INDUSTRIAL)</text>
+            <!-- Inner symmetric glass 3.0 mm -->
+            <rect x="55" y="100" width="450" height="42" fill="${cGlass}" stroke="${cInk}" stroke-width="1.5"/>
+            <text x="200" y="125" font-family="Geist Mono, monospace" font-size="10.5" fill="${cInk}">LÁMINA INTERIOR (3.0 mm) · SUPERFICIE 4 (CARA INFERIOR)</text>
+            <!-- Housing 50 + Cladding 48 + Filler 28 + Detachable 12V LED -->
+            <polygon points="88,142 152,142 132,174 78,174" fill="${cDark}" stroke="${cInk}" stroke-width="1.5"/>
+            <polygon points="98,142 142,142 126,164 92,164" fill="${cPvb}" stroke="${cSlate}" stroke-width="1.2"/>
+            <circle cx="108" cy="156" r="5" fill="${on ? cLed : `#777`}"/>
+            <text x="55" y="198" font-family="Geist Mono, monospace" font-size="10" fill="${cInk}">MÓDULO 12V CC DESMONTABLE</text>
+            ${rayMarkup}
+          </svg>
+        `;
+
+        ctrlBox.innerHTML = `
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:var(--space-md);width:100%;flex-wrap:wrap;">
+            <div style="font-size:0.86rem;color:var(--on-surface-variant);flex:1 1 260px;">
+              <strong>Simulación Óptica Sup. 4:</strong> Conmute el módulo LED de 12V CC para verificar la transparencia en apagado frente a la Reflexión Total Interna (TIR) en cavidad con <em>filler 28</em> y <em>cladding 48</em>.
+            </div>
+            <button type="button" class="btn ${on ? `btn-primary` : `btn-secondary`}" onclick="toggleFractal2Led()">
+              ${on ? `Apagar Módulo LED 12V CC` : `Encender Módulo LED 12V CC`}
+            </button>
+          </div>
+        `;
+      }
+    }
+
+    // =========================================================================
+    // SECTION 2: INTERVIEW GUIDE RENDERER
+    // =========================================================================
+    function renderQuestions() {
+      const stageSel = document.getElementById(`q-filter-stage`);
+      const dimSel = document.getElementById(`q-filter-dim`);
+      const grid = document.getElementById(`interview-grid`);
+      if (!grid) return;
+
+      const stageVal = stageSel ? stageSel.value : `all`;
+      const dimVal = dimSel ? dimSel.value : `all`;
+      APP_STATE.qStage = stageVal;
+      APP_STATE.qDim = dimVal;
+
+      const filtered = INTERVIEW_QUESTIONS.filter((item) => {
+        const okStage = stageVal === `all` || String(item.stage) === stageVal;
+        const okDim = dimVal === `all` || item.dim === dimVal;
+        return okStage && okDim;
+      });
+
+      if (filtered.length === 0) {
+        grid.innerHTML = `<div class="figure-card"><p style="margin:0;">No hay preguntas para los filtros seleccionados. Ajuste el filtro de etapa o subdimensión.</p></div>`;
+        return;
+      }
+
+      grid.innerHTML = filtered.map((q) => `
+        <article class="question-card">
+          <div class="q-header">
+            <span class="q-code">${q.code}</span>
+            <span class="q-stage-tag">${q.stageLabel}</span>
+          </div>
+          <div class="tripartite-block">
+            <div class="tri-item">
+              <span class="tri-tag">1 · Qué se generó (Hito del caso)</span>
+              ${q.q1}
+            </div>
+            <div class="tri-item">
+              <span class="tri-tag">2 · Cómo se evidenció (Prueba documental)</span>
+              ${q.q2}
+            </div>
+            <div class="tri-item tri-decision">
+              <span class="tri-tag">3 · Toma de decisiones (Comité I+D)</span>
+              ${q.q3}
+            </div>
+          </div>
+        </article>
+      `).join(``);
+
+      persistState();
+    }
+
+    function resetQuestionFilters() {
+      const s = document.getElementById(`q-filter-stage`);
+      const d = document.getElementById(`q-filter-dim`);
+      if (s) s.value = `all`;
+      if (d) d.value = `all`;
+      renderQuestions();
+    }
+
+    // =========================================================================
+    // SECTION 3: INTERACTIVE 4x4 MATRIX & MODAL INSPECTOR
+    // =========================================================================
+    function renderMatrix() {
+      const container = document.getElementById(`matrix-grid`);
+      if (!container) return;
+
+      const stages = [
+        { num: 1, kicker: `ETAPA 1`, name: `Exploración`, sub: `Concepto y Mercado` },
+        { num: 2, kicker: `ETAPA 2`, name: `Estructuración`, sub: `Prototipo y Negocio` },
+        { num: 3, kicker: `ETAPA 3`, name: `Validación`, sub: `PMV y Pre-comercial` },
+        { num: 4, kicker: `ETAPA 4`, name: `Implementación`, sub: `Producto y Mercado` }
+      ];
+      const dims = [
+        { key: `TRL`, title: `Funcionalidad`, sub: `Objeto de la Innovación` },
+        { key: `IPRL`, title: `Prop. Intelectual`, sub: `Protección y FTO` },
+        { key: `MRL`, title: `Manufactura`, sub: `Capacidad y Yield` },
+        { key: `BRL`, title: `Competencia`, sub: `USP y Adopción OEM` }
+      ];
+
+      let html = `
+        <div class="matrix-corner">
+          <span class="dossier-meta">DIMENSIÓN × ETAPA</span>
+          <strong style="font-family:var(--font-headline);font-size:0.95rem;">Fractal 2 (AGP)</strong>
+        </div>
+      `;
+
+      stages.forEach((st) => {
+        html += `
+          <div class="matrix-col-head">
+            <span class="stage-kicker">${st.kicker}</span>
+            <span class="stage-name">${st.name}</span>
+            <span style="font-size:0.75rem;opacity:0.85;">${st.sub}</span>
+          </div>
+        `;
+      });
+
+      dims.forEach((dm) => {
+        html += `
+          <div class="matrix-row-head">
+            <span class="dim-code">${dm.key}</span>
+            <span class="dim-title">${dm.title}</span>
+            <span class="dim-sub">${dm.sub}</span>
+          </div>
+        `;
+        stages.forEach((st) => {
+          const idx = MATRIX_CELLS.findIndex((c) => c.dim === dm.key && c.stage === st.num);
+          const cell = MATRIX_CELLS[idx];
+          if (!cell) return;
+          const isAudited = !!APP_STATE.auditedCells[cell.id];
+          const matches = cellMatchesFilter(cell);
+
+          html += `
+            <button type="button"
+              class="matrix-cell cell-${cell.status} ${matches ? `` : `is-dimmed`}"
+              data-cell-id="${cell.id}"
+              onclick="openCellModal(${idx})">
+              <div>
+                <div class="cell-top">
+                  <span class="cell-code">${cell.dim} ${cell.stage}</span>
+                  <span class="sem-badge sem-${cell.status}"><span class="sem-dot"></span>${cell.statusLabel}</span>
+                </div>
+                <h3 class="cell-title" style="margin-top:0.45rem;">${cell.title}</h3>
+                <p class="cell-summary" style="margin-top:0.3rem;">${cell.shortSummary}</p>
+              </div>
+              <div class="cell-footer">
+                <span>Abrir expediente →</span>
+                ${isAudited ? `<span class="audited-pill">✓ Auditada</span>` : ``}
+              </div>
+            </button>
+          `;
+        });
+      });
+
+      container.innerHTML = html;
+    }
+
+    function cellMatchesFilter(cell) {
+      const okStage = APP_STATE.mStage === `all` || String(cell.stage) === APP_STATE.mStage;
+      const okDim = APP_STATE.mDim === `all` || cell.dim === APP_STATE.mDim;
+      const okStatus = APP_STATE.mStatus === `all` || cell.status === APP_STATE.mStatus;
+      const q = APP_STATE.mSearch.trim().toLowerCase();
+      const haystack = `${cell.id} ${cell.title} ${cell.shortSummary} ${cell.caseEvidence} ${cell.industryExample}`.toLowerCase();
+      const okSearch = !q || haystack.includes(q);
+      return okStage && okDim && okStatus && okSearch;
+    }
+
+    function applyMatrixFilters() {
+      const s = document.getElementById(`m-filter-stage`);
+      const d = document.getElementById(`m-filter-dim`);
+      const st = document.getElementById(`m-filter-status`);
+      const q = document.getElementById(`m-filter-search`);
+
+      APP_STATE.mStage = s ? s.value : `all`;
+      APP_STATE.mDim = d ? d.value : `all`;
+      APP_STATE.mStatus = st ? st.value : `all`;
+      APP_STATE.mSearch = q ? q.value : ``;
+
+      renderMatrix();
+      persistState();
+    }
+
+    function resetMatrixFilters() {
+      const s = document.getElementById(`m-filter-stage`);
+      const d = document.getElementById(`m-filter-dim`);
+      const st = document.getElementById(`m-filter-status`);
+      const q = document.getElementById(`m-filter-search`);
+      if (s) s.value = `all`;
+      if (d) d.value = `all`;
+      if (st) st.value = `all`;
+      if (q) q.value = ``;
+      applyMatrixFilters();
+    }
+
+    // =========================================================================
+    // MODAL INSPECTOR
+    // =========================================================================
+    function openCellModal(idx) {
+      if (idx < 0 || idx >= MATRIX_CELLS.length) return;
+      APP_STATE.activeModalIndex = idx;
+      const cell = MATRIX_CELLS[idx];
+
+      const backdrop = document.getElementById(`cell-modal-backdrop`);
+      const codeEl = document.getElementById(`modal-cell-code`);
+      const stageEl = document.getElementById(`modal-cell-stage`);
+      const badgeEl = document.getElementById(`modal-cell-badge`);
+      const titleEl = document.getElementById(`modal-cell-title`);
+      const subdimEl = document.getElementById(`modal-cell-subdim`);
+      const descEl = document.getElementById(`modal-desc-kth`);
+      const caseEl = document.getElementById(`modal-evidence-case`);
+      const indEl = document.getElementById(`modal-industry-example`);
+      const semEl = document.getElementById(`modal-semaphore-reason`);
+      const noteEl = document.getElementById(`modal-audit-note`);
+      const toggleBtn = document.getElementById(`modal-toggle-audit`);
+      const counterEl = document.getElementById(`modal-counter`);
+
+      if (codeEl) codeEl.textContent = `${cell.dim} ${cell.stage}`;
+      if (stageEl) stageEl.textContent = cell.stageName.toUpperCase();
+      if (badgeEl) {
+        badgeEl.className = `sem-badge sem-${cell.status}`;
+        badgeEl.innerHTML = `<span class="sem-dot"></span>${cell.statusLabel}`;
+      }
+      if (titleEl) titleEl.textContent = cell.title;
+      if (subdimEl) subdimEl.textContent = cell.dimName;
+      if (descEl) descEl.innerHTML = `<p style="margin:0;">${cell.kthDesc}</p>`;
+      if (caseEl) caseEl.innerHTML = cell.caseEvidence;
+      if (indEl) indEl.innerHTML = `<p style="margin:0;">${cell.industryExample}</p>`;
+      if (semEl) semEl.innerHTML = `<p style="margin:0;">${cell.semaphoreReason}</p>`;
+      if (noteEl) noteEl.value = APP_STATE.auditNotes[cell.id] || ``;
+      if (counterEl) counterEl.textContent = `Casilla ${idx + 1} de 16`;
+
+      const isAudited = !!APP_STATE.auditedCells[cell.id];
+      if (toggleBtn) {
+        toggleBtn.textContent = isAudited ? `✓ Casilla Auditada (Clic para desmarcar)` : `Marcar como Auditada`;
+        toggleBtn.classList.toggle(`is-active`, isAudited);
+      }
+
+      if (backdrop) backdrop.classList.add(`is-open`);
+      const closeBtn = document.getElementById(`modal-close-btn`);
+      if (closeBtn) closeBtn.focus();
+    }
+
+    function closeCellModal() {
+      const backdrop = document.getElementById(`cell-modal-backdrop`);
+      if (backdrop) backdrop.classList.remove(`is-open`);
+      APP_STATE.activeModalIndex = -1;
+    }
+
+    function handleBackdropClick(e) {
+      if (e.target && e.target.id === `cell-modal-backdrop`) {
+        closeCellModal();
+      }
+    }
+
+    function navigateModal(delta) {
+      if (APP_STATE.activeModalIndex < 0) return;
+      const next = (APP_STATE.activeModalIndex + delta + MATRIX_CELLS.length) % MATRIX_CELLS.length;
+      openCellModal(next);
+    }
+
+    function toggleCurrentCellAudit() {
+      if (APP_STATE.activeModalIndex < 0) return;
+      const cell = MATRIX_CELLS[APP_STATE.activeModalIndex];
+      APP_STATE.auditedCells[cell.id] = !APP_STATE.auditedCells[cell.id];
+      updateAuditBadge();
+      renderMatrix();
+      openCellModal(APP_STATE.activeModalIndex);
+      persistState();
+    }
+
+    function saveCurrentCellNote(val) {
+      if (APP_STATE.activeModalIndex < 0) return;
+      const cell = MATRIX_CELLS[APP_STATE.activeModalIndex];
+      APP_STATE.auditNotes[cell.id] = val;
+      persistState();
+    }
+
+    // =========================================================================
+    // AUDIT EXPORT & INLINE TWO-STEP RESET
+    // =========================================================================
+    function exportAuditCSV() {
+      const header = [`Casilla`, `Subdimension`, `Etapa`, `Semaforo`, `Hito`, `Auditada`, `Nota_Evaluador`];
+      const rows = MATRIX_CELLS.map((c) => [
+        c.id,
+        c.dimName,
+        c.stageName,
+        c.statusLabel,
+        c.title,
+        APP_STATE.auditedCells[c.id] ? `SI` : `NO`,
+        (APP_STATE.auditNotes[c.id] || ``).replace(/[\r\n]+/g, ` `)
+      ].map((field) => `"${String(field).replace(/"/g, `""`)}"`).join(`,`));
+
+      const csvContent = [header.join(`,`), ...rows].join(`\n`);
+      const msgEl = document.getElementById(`audit-status-msg`);
+
+      if (window.notebookAppApi && typeof window.notebookAppApi.triggerFileDownload === `function`) {
+        window.notebookAppApi.triggerFileDownload({
+          content: csvContent,
+          contentType: `text/csv`,
+          encoding: `UTF-8`,
+          filename: `Variolux_Fractal2_Grupo12_Matriz.csv`
+        });
+        if (msgEl) msgEl.textContent = `Archivo CSV descargado correctamente.`;
+      } else {
+        if (msgEl) msgEl.textContent = `Descarga CSV preparada (${MATRIX_CELLS.length} filas).`;
+      }
+    }
+
+    function handleResetAudit(btn) {
+      const msgEl = document.getElementById(`audit-status-msg`);
+      if (btn.dataset.armed !== `true`) {
+        btn.dataset.armed = `true`;
+        btn.textContent = `Confirmar reinicio`;
+        if (msgEl) msgEl.textContent = `Haga clic nuevamente para borrar marcas y notas de auditoría.`;
+        return;
+      }
+      btn.dataset.armed = `false`;
+      btn.textContent = `Reiniciar Auditoría`;
+      APP_STATE.auditedCells = {};
+      APP_STATE.auditNotes = {};
+      updateAuditBadge();
+      renderMatrix();
+      persistState();
+      if (msgEl) msgEl.textContent = `Bitácora de auditoría reiniciada a estado inicial.`;
+    }
+
+    // =========================================================================
+    // INITIALIZATION
+    // =========================================================================
+    document.addEventListener(`keydown`, (e) => {
+      if (e.key === `Escape`) closeCellModal();
+    });
+
+    (async function initApp() {
+      if (window.notebookAppApi && typeof window.notebookAppApi.getAppState === `function`) {
+        try {
+          const saved = await window.notebookAppApi.getAppState();
+          if (saved && typeof saved === `object`) {
+            if (saved.activeTech && TECH_DATA[saved.activeTech]) APP_STATE.activeTech = saved.activeTech;
+            if (typeof saved.varioVoltage === `number`) APP_STATE.varioVoltage = saved.varioVoltage;
+            if (typeof saved.fractal2LedOn === `boolean`) APP_STATE.fractal2LedOn = saved.fractal2LedOn;
+            if (saved.chartMode === `bar` || saved.chartMode === `radar`) APP_STATE.chartMode = saved.chartMode;
+            if (saved.mStage) APP_STATE.mStage = saved.mStage;
+            if (saved.mDim) APP_STATE.mDim = saved.mDim;
+            if (saved.mStatus) APP_STATE.mStatus = saved.mStatus;
+            if (saved.qStage) APP_STATE.qStage = saved.qStage;
+            if (saved.qDim) APP_STATE.qDim = saved.qDim;
+            if (saved.auditedCells && typeof saved.auditedCells === `object`) APP_STATE.auditedCells = saved.auditedCells;
+            if (saved.auditNotes && typeof saved.auditNotes === `object`) APP_STATE.auditNotes = saved.auditNotes;
+          }
+        } catch (err) {
+          // Ignore hydration failure
+        }
+      }
+
+      // Sync filter inputs with restored state
+      const ms = document.getElementById(`m-filter-stage`);
+      const md = document.getElementById(`m-filter-dim`);
+      const mst = document.getElementById(`m-filter-status`);
+      const qs = document.getElementById(`q-filter-stage`);
+      const qd = document.getElementById(`q-filter-dim`);
+      if (ms) ms.value = APP_STATE.mStage;
+      if (md) md.value = APP_STATE.mDim;
+      if (mst) mst.value = APP_STATE.mStatus;
+      if (qs) qs.value = APP_STATE.qStage;
+      if (qd) qd.value = APP_STATE.qDim;
+
+      const bBar = document.getElementById(`btn-chart-bar`);
+      const bRad = document.getElementById(`btn-chart-radar`);
+      if (bBar) bBar.classList.toggle(`is-active`, APP_STATE.chartMode === `bar`);
+      if (bRad) bRad.classList.toggle(`is-active`, APP_STATE.chartMode === `radar`);
+
+      selectTech(APP_STATE.activeTech);
+      renderQuestions();
+      renderMatrix();
+      updateAuditBadge();
+      renderReadinessChart();
+
+      if (window.lucide && typeof window.lucide.createIcons === `function`) {
+        window.lucide.createIcons();
+      }
+
+      if (window.notebookAppApi && typeof window.notebookAppApi.notifyAppReady === `function`) {
+        window.notebookAppApi.notifyAppReady();
+      }
+    })();
+  </script>
+</body>
+</html>
